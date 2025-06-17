@@ -1,11 +1,11 @@
-# VirtualRouter
-This is an extension of the https://github.com/ebystewart/L2_Switch_L3_Router Project.
+# VirtualRouter v2
+This is an extension of the https://github.com/ebystewart/L2_Switch_L3_Router and https://github.com/ebystewart/VirtualRouter.git Projects.
 
 - L2 Switching
     - MAC Learning
     - MAC Forwarding
     - MAC Table
-    - Virtual LAN (VLAN)
+    - Virtual LAN (VLAN) - No Spanning Tree Protocol implemented to prevent looping
 - L3 Forwarding
 - L3 routing using SPF Algorithm
     - Routing Table
@@ -14,9 +14,10 @@ This is an extension of the https://github.com/ebystewart/L2_Switch_L3_Router Pr
     - ARP entry with expiry timer
 - Ping (minimal)
 - IP-in-IP
-- Notification Chain to notify subscribers of change in configuration
+- Notification Chain to notify subscribers of change in networkconfiguration
 - Logging infrastructure to dispaly sent and received messages
-- ETH/IP Packet Generator
+- Expiry timers for dynamic ARP table
+- ETH/IP Packet Generator for Testing
 
 Useful Commands:
 
