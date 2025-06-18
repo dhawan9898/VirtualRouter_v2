@@ -72,7 +72,7 @@ struct arp_pending_entry_{
 };
 
 typedef struct arp_entry_{
-    ip_add_t  ip_addr;
+    ip_add_t  ip_addr;   /* Key */
     mac_add_t mac_addr;
     char oif_name[IF_NAME_SIZE];
     glthread_t arp_glue;
@@ -175,7 +175,7 @@ static inline void SET_COMMON_ETH_FCS(ethernet_frame_t *frame, unsigned int payl
 static inline ethernet_frame_t *ALLOC_ETH_HRD_WITH_PAYLOAD(char *pkt, unsigned int pkt_size)
 {
     /* Copy the data in a local buffer */
-    char *ptr = calloc(0, pkt_size);
+    char *ptr = calloc(1, pkt_size);
     memcpy(ptr, pkt, pkt_size);
 
     /* ptr - 6 Bytes of dst MAC - 6 Bytes of src MAC - payload */

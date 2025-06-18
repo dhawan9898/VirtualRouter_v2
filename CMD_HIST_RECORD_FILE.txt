@@ -264,3 +264,23 @@ run node R1 ping 122.1.1.1
 run node R1 ping 122.1.1.2
 run node R1 ping 122.1.1.2
 run node R1 ping 122.1.1.2
+show node R1 rt
+run node R1 ping 122.1.1.2
+.
+run node R1 ping 122.1.1.3
+run node R1 ping 122.1.1.3 ero 122.1.1.4
+run node R1 ping 122.1.1.3
+show node R1 arp
+run node R1 ping 122.1.1.3 ero 122.1.1.4
+show node R1 arp
+show node R4 arp
+show node R2 arp
+show node R3 arp
+run node R1 ping 122.1.1.3 ero 122.1.1.4
+run node R1 ping 122.1.1.3 ero 122.1.1.4
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.3 ero 122.1.1.4
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.3 ero 122.1.1.4
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.3 ero 122.1.1.4

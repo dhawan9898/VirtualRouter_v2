@@ -549,7 +549,9 @@ void create_arp_sane_entry(node_t *node, arp_table_t *arp_table, char *ip_addr, 
         //return arp_entry;
     }
     /* If ARP entry does not exist, create a new sane entry */
-    arp_entry = calloc(1, sizeof(arp_entry_t));
+    printf("%s: Info - Callocing a sane entry\n",__FUNCTION__);
+    arp_entry = (arp_entry_t *)calloc(1, sizeof(arp_entry_t));
+    printf("%s: Info - ARP sane entry created @ %x\n",__FUNCTION__, arp_entry);
     arp_entry->exp_timer_wt_elem = NULL;
     strncpy(arp_entry->ip_addr.ip_addr, ip_addr, 16U);
     arp_entry->ip_addr.ip_addr[15] = '\0';

@@ -444,7 +444,7 @@ static void layer3_ip_pkt_recv_from_bottom(node_t *node, interface_t *interface,
                 case IP_IN_IP:
                     /*Packet has reached ERO, now set the packet onto its new 
                     Journey from ERO to final destination*/
-                    layer3_ip_pkt_recv_from_layer2(node, interface, (char *)IP_PKT_PAYLOAD_PTR(ip_hdr), IP_PKT_PAYLOAD_SIZE(ip_hdr), 0);
+                    layer3_ip_pkt_recv_from_layer2(node, interface, (ip_hdr_t *)IP_PKT_PAYLOAD_PTR(ip_hdr), IP_PKT_PAYLOAD_SIZE(ip_hdr), 0);
                     return;
                 default:
                     ;
