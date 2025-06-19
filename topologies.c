@@ -1,6 +1,7 @@
 #include "graph.h"
 #include "comm.h"
 #include "Layer2/layer2.h"
+#include "tcpconst.h"
 
 graph_t *
 build_dualswitch_topo(){
@@ -328,6 +329,86 @@ run node R1 ping 122.1.1.3 ero 122.1.1.4
     node_set_intf_ip_address(R4, "eth6", "40.1.1.1", 24);
     
     network_start_pkt_receiver_thread(topo);
+
+    return topo;
+}
+
+graph_t *
+cross_link_topology(){
+
+/*                                                +--------+-+
+                   +---------+                    | R2       |
+               eth1| R1      |eth2     20.1.1.2/24|122.1.1.2 |eth8      
+       +-----------+122.1.1.1+--------------------+          +------------------+
+       |10.1.1.2/24|         |20.1.1.1/24     eth3|          |50.1.1.1/24       |
+       |           +---------+                    +-----+--+-+                  +
+       +                                         eth4/  |eth7                   |
+       |10.1.1.1/24                      30.1.1.1/24/   |40.1.1.2/24            |
+       |eth0                                       /    |                  eth9 |50.1.1.2/24
+   +---+---+--+                                   /     |                  +----+-----+
+   |          |                                  /      |                  |    R3    |
+   | R0       |                                 /       |                  | 122.1.1.3|
+   |122.1.1.0 |                                /        |                  |          |
+   |          |                               /         |                  +----+-----+
+   +---+---+--|               ---------------/          |                       |eth10
+       |eth14                /                          |                       |60.1.1.1/24
+       |80.1.1.1/24         /                           |                       |
+       |                   /                            |                       |
+       |                  /                        eth6 |40.1.1.1/24            |
+       |             eth5/30.1.1.2/24             +-----+----+                  |
+       |           +----/----+                    |   R4     |                  |
+       |      eth15|   R5    |eth12    70.1.1.2/24|122.1.1.4 |eth11             |
+       +-----------+122.1.1.5|+-------------------+          +------------------+
+        80.1.1.2/24|         |70.1.1.1/24    eth13|          |60.1.1.2/24
+                  -+---------+                    +----------+
+
+*/
+    graph_t *topo = create_new_graph("Cross Links Topology"); 
+
+    node_t *R0 = create_graph_node(topo, "R0");
+    node_t *R1 = create_graph_node(topo, "R1");
+    node_t *R2 = create_graph_node(topo, "R2");
+    node_t *R3 = create_graph_node(topo, "R3");
+    node_t *R4 = create_graph_node(topo, "R4");
+    node_t *R5 = create_graph_node(topo, "R5");
+
+    insert_link_between_two_nodes(R0, R1, "eth0",  "eth1",  INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R0, R5, "eth14", "eth15", INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R1, R2, "eth2",  "eth3",  INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R2, R3, "eth8",  "eth9",  INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R2, R4, "eth7",  "eth6",  INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R2, R5, "eth4",  "eth5",  INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R3, R4, "eth10", "eth11", INTF_METRIC_DEFAULT);
+    insert_link_between_two_nodes(R4, R5, "eth13", "eth12", INTF_METRIC_DEFAULT);
+
+    node_set_loopback_address(R0, "122.1.1.0");
+    node_set_loopback_address(R1, "122.1.1.1");
+    node_set_loopback_address(R2, "122.1.1.2");
+    node_set_loopback_address(R3, "122.1.1.3");
+    node_set_loopback_address(R4, "122.1.1.4");
+    node_set_loopback_address(R5, "122.1.1.5");
+
+    node_set_intf_ip_address(R0, "eth0", "10.1.1.1", 24);
+    node_set_intf_ip_address(R0, "eth14","80.1.1.1", 24);
+
+    node_set_intf_ip_address(R1, "eth1", "10.1.1.2", 24);
+    node_set_intf_ip_address(R1, "eth2", "20.1.1.1", 24);
+
+    node_set_intf_ip_address(R2, "eth3", "20.1.1.2", 24);
+    node_set_intf_ip_address(R2, "eth8", "50.1.1.1", 24);
+    node_set_intf_ip_address(R2, "eth4", "30.1.1.1", 24);
+    node_set_intf_ip_address(R2, "eth7", "40.1.1.2", 24);
+
+    node_set_intf_ip_address(R3, "eth9", "50.1.1.2", 24);
+    node_set_intf_ip_address(R3, "eth10","60.1.1.1", 24);
+
+    node_set_intf_ip_address(R4, "eth6", "40.1.1.1", 24);
+    node_set_intf_ip_address(R4, "eth11","60.1.1.2", 24);
+    node_set_intf_ip_address(R4, "eth13","70.1.1.2", 24);
+
+    node_set_intf_ip_address(R5, "eth5", "30.1.1.2", 24);
+    node_set_intf_ip_address(R5, "eth12","70.1.1.1", 24);
+    node_set_intf_ip_address(R5, "eth15","80.1.1.2", 24);
 
     return topo;
 }

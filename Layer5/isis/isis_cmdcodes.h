@@ -1,7 +1,7 @@
 #ifndef _ISIS_CMDCODES_H__
 #define _ISIS_CMDCODES_H__
 
-
-
+#define ISIS_CONFIG_NODE_ENABLE 1U
+#define CMDCODE_SHOW_NODE_ISIS_PROTOCOL 2U
 
 #endif

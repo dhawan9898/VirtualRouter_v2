@@ -11,6 +11,7 @@ extern graph_t *build_dualswitch_topo(void);
 extern graph_t *build_linear_topo(void);
 extern graph_t *linear_3_node_topo(void);
 extern graph_t *L2_loop_topo(void);
+extern graph_t *cross_link_topology(void);
 extern void nw_init_cli(void);
 extern void init_tcp_ip_stack(void);
 
@@ -23,7 +24,8 @@ int main(int argc, char **argv)
     //topo = build_first_topo();
     //topo = build_dualswitch_topo();
     //topo = linear_3_node_topo(); // to test ping
-    topo = build_square_topo();
+    //topo = build_square_topo();
+    topo = cross_link_topology();
     dump_nw_graph(topo);
     /*
     sleep(2);

@@ -202,7 +202,9 @@ static void pending_arp_processing_callback_function(node_t *node, interface_t *
     unsigned int pkt_size = arp_pending_entry->pkt_size;
     memcpy(eth_pkt->dst_mac.mac_addr, arp_entry->mac_addr.mac_addr, sizeof(mac_add_t));
     memcpy(eth_pkt->src_mac.mac_addr, IF_MAC(oif), sizeof(mac_add_t));
+   
     SET_COMMON_ETH_FCS(eth_pkt, pkt_size - GET_ETH_HDR_SIZE_EXCL_PAYLOAD(eth_pkt), 0);
+    
     send_pkt_out((char *)eth_pkt, pkt_size, oif);
     printf("%s: Info - pkt size is %u\n", __FUNCTION__, pkt_size);  
 }
@@ -378,7 +380,7 @@ void demote_pkt_to_layer2(node_t *node, unsigned int next_hop_ip, char *outgoing
 
 void init_arp_table(arp_table_t **arp_table)
 {
-    *arp_table = calloc(0, sizeof(arp_table_t));
+    *arp_table = calloc(1, sizeof(arp_table_t));
     init_glthread(&((*arp_table)->arp_entries));
 }
 /* CRUD ops for ARP table */

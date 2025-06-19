@@ -21,7 +21,10 @@ OBJS=glueThread/glthread.o	\
 		tcp_ip_trace.o		\
 		tcp_ip_stack_init.o	\
 		notif.o				\
-		WheelTimer/WheelTimer.o
+		WheelTimer/WheelTimer.o	\
+		Layer5/isis/isis_cli.o	\
+		Layer5/isis/isis_rtr.o	\
+		Layer5/isis/isis_intf.o
 
 VirtualRouter.exe:${OBJS} CommandParser/libcli.a
 	${CC} ${CFLAGS} ${OBJS} -o VirtualRouter.exe ${LIBS}
@@ -90,7 +93,16 @@ notif.o:notif.c
 	${CC} ${CFLAGS} -c notif.c -I . -o notif.o
 
 WheelTimer/WheelTimer.o:WheelTimer/WheelTimer.c
-	${CC} ${CFLAGS} -c WheelTimer/WheelTimer.c -I . -I WheelTimer/ -o WheelTimer/WheelTimer.o	
+	${CC} ${CFLAGS} -c WheelTimer/WheelTimer.c -I . -I WheelTimer/ -o WheelTimer/WheelTimer.o
+
+Layer5/isis/isis_cli.o:Layer5/isis/isis_cli.c
+	${CC} ${CFLAGS} -c Layer5/isis/isis_cli.c -I . -I Layer5/ -o Layer5/isis/isis_cli.o
+
+Layer5/isis/isis_rtr.o:Layer5/isis/isis_rtr.c
+	${CC} ${CFLAGS} -c Layer5/isis/isis_rtr.c -I . -I Layer5/ -o Layer5/isis/isis_rtr.o
+
+Layer5/isis/isis_intf.o:Layer5/isis/isis_intf.c
+	${CC} ${CFLAGS} -c Layer5/isis/isis_intf.c -I . -I Layer5/ -o Layer5/isis/isis_intf.o
 
 CommandParser/libcli.a:
 	(cd CommandParser; make)
@@ -103,6 +115,7 @@ clean:
 	rm Layer5/*.o
 	rm Layer5/spf_algo/*.o
 	rm WheelTimer/*.o
+	rm Layer5/isis/*.o
 	rm *.exe
 	(cd CommandParser; make clean)
 

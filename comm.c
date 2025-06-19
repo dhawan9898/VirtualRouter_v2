@@ -79,9 +79,17 @@ static int _send_pkt_out(int sock_fd, char *pkt_data, unsigned int pkt_size, uns
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = dst_udp_port_no;
 
+    #if 0 // not working
+    int dst_addr_int;
+    char *localhost = "127.0.0.1";
+    inet_pton(AF_INET, localhost, &dst_addr_int);
+    dst_addr_int = htonl(dst_addr_int);
+    dest_addr.sin_addr.s_addr = dst_addr_int;
+    #endif
+    
     struct hostent *host = (struct hostent *)gethostbyname("127.0.0.1");
     dest_addr.sin_addr = *((struct in_addr *)host->h_addr);
-
+    
     rc = sendto(sock_fd, pkt_data, pkt_size, 0, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
 
     return rc;
@@ -165,6 +173,13 @@ int send_pkt_out(char *pkt, unsigned int pkt_size, interface_t *interface)
 
     if(!nbr_node)
         return -1;
+
+    if (pkt_size + IF_NAME_SIZE > MAX_PACKET_BUFFER_SIZE)
+    {
+        printf("Error : Node :%s, Pkt Size exceeded\n", sending_node->node_name);
+        return -1;
+    }
+
     unsigned int dst_udp_port_no = nbr_node->udp_port_number;
     int sock_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(sock_fd < 3)
@@ -175,7 +190,8 @@ int send_pkt_out(char *pkt, unsigned int pkt_size, interface_t *interface)
     memset(send_buffer, 0, MAX_SEND_BUFFER_SIZE);
 
     char *pkt_with_aux_data = send_buffer;
-    strcpy(pkt_with_aux_data, other_interface->if_name);
+    strncpy(pkt_with_aux_data, other_interface->if_name, IF_NAME_SIZE);
+    pkt_with_aux_data[15] = '\0';
     memcpy(pkt_with_aux_data + IF_NAME_SIZE, pkt, pkt_size);
 
     rc = _send_pkt_out(sock_fd, pkt_with_aux_data, pkt_size + IF_NAME_SIZE, dst_udp_port_no);

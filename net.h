@@ -63,6 +63,9 @@ typedef struct node_nw_prop_{
     /* sending buffer */
     char *send_buffer;  /* used to send out pkts */
     char *send_log_buffer; /* used for logging */
+
+    /* ISIS protocol info */
+    void *isis_node_info;
 }node_nw_prop_t;
 
 typedef struct intf_nw_prop_{
@@ -83,6 +86,9 @@ typedef struct intf_nw_prop_{
     /* Interface Statistics */
     uint32_t pkt_recv;
     uint32_t pkt_sent;
+
+    /* ISIS interface info */
+    void *isis_intf_info;
 }intf_nw_prop_t;
 
 static inline void init_node_nw_prop(node_nw_prop_t *node_nw_prop);

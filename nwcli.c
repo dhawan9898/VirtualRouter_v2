@@ -9,6 +9,40 @@
 
 extern graph_t *topo;
 
+extern int isis_config_cli_tree(param_t *param);
+extern int isis_show_cli_tree(param_t *param);
+/* The definitions below allow to hook up new commands (show/run)
+   to the CLI. The Applications can write their own CLI trees and 
+   hook up them here in this file, to integrate their commands to
+   the CLI.   
+*/
+typedef int(*cli_register_cb)(param_t *);
+
+static cli_register_cb cli_register_cb_arr_config_node_node_name_protocol_level[] =
+    {
+        isis_config_cli_tree,
+        0 /* Last member must be NULL */
+    };
+
+/* show node <node-name> protocol ... */
+static cli_register_cb cli_register_cb_arr_show_node_node_name_protcol_level[] =
+	{
+        isis_show_cli_tree,
+		
+        /* Add more CB here */
+
+        0 /*  Last member must be NULL */
+	};
+
+static void cli_register_application_cli_trees(param_t *param, cli_register_cb *cli_register_cb_arr){
+
+    int i = 0;
+    while (cli_register_cb_arr[i])
+    {
+        (cli_register_cb_arr[i])(param);
+        i++;
+    }
+}
 
 /* Display function when user presses ? */
 void display_graph_nodes(param_t *param, ser_buff_t *tlv_buf){
@@ -520,6 +554,15 @@ void nw_init_cli(void)
             libcli_register_param(&node, &node_name);
             {
                 {
+                    /* show node <node-name> protocol */
+                    static param_t protocol;
+                    init_param(&protocol, CMD, "protocol", 0, 0, INVALID, 0, "App protocol");
+                    libcli_register_param(&node_name, &protocol);
+
+                    /* show node <node-name> protocol ...*/
+                    cli_register_application_cli_trees(&protocol, cli_register_cb_arr_show_node_node_name_protcol_level);
+                }
+                {
                     /* show node <node_name> log-status */
                     static param_t log_status;
                     init_param(&log_status, CMD, "log-status", traceoptions_handler, 0, INVALID, 0, "log-status");
@@ -680,6 +723,17 @@ void nw_init_cli(void)
             init_param(&node_name, LEAF, 0, 0, validate_node_existence, STRING, "node-name", "Node Name");
             libcli_register_param(&node, &node_name);
             {
+                {
+                    /*config node <node-name> [no] protocol*/
+                    static param_t protocol;
+                    init_param(&protocol, CMD, "protocol", 0, 0, INVALID, 0, "protocol");
+                    libcli_register_param(&node_name, &protocol);
+
+                    /* config node <node-name> protocol....*/
+                    cli_register_application_cli_trees(&protocol,
+                                                       cli_register_cb_arr_config_node_node_name_protocol_level);
+                    support_cmd_negation(&protocol);
+                }
                 /* config node <node_name> traceoptions flag <flag-val> */
                 tcp_ip_traceoptions_cli(&node_name, NULL);
 
