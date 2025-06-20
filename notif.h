@@ -11,6 +11,7 @@
 typedef bool bool_t;
 
 typedef void (*nfc_app_cb)(void *, size_t);
+typedef bool (*nfc_pkt_trap)(char *, size_t);
 
 typedef struct notif_chain_{
     char nfc_name[64];
@@ -22,13 +23,14 @@ typedef struct notif_chain_elem_{
     size_t key_size;
     bool_t is_key_set;
     nfc_app_cb app_cb;
+    nfc_pkt_trap pkt_trap_cb;
     glthread_t glue;
-
 }notif_chain_elem_t;
 
 GLTHREAD_TO_STRUCT(glthread_glue_to_notif_chain_elem, notif_chain_elem_t, glue);
 
 void nfc_register_notif_chain(notif_chain_t *nfc, notif_chain_elem_t *nfce);
+void nfc_de_register_notif_chain(notif_chain_t *nfc, notif_chain_elem_t *nfce_template);
 
 void nfc_invoke_notif_chain(notif_chain_t *nfc, void *arg, size_t arg_size, char *key, size_t key_size);
 

@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "tcp_ip_trace.h"
+#include "notif.h"
 
 #define IF_NAME_SIZE       16U
 #define NODE_NAME_SIZE     16U
@@ -46,6 +47,9 @@ struct node_{
 
     /* Node Logging */
     log_t log_info;
+
+    /* L2 net-filter hook (simplified) */
+    notif_chain_t layer2_proto_reg_db2;
 };
 
 typedef struct graph_{

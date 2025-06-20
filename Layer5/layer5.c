@@ -73,3 +73,27 @@ void tcp_app_register_l3_protocol_interest(uint32_t L5_protocol, nfc_app_cb app_
 
 	nfc_register_notif_chain(&layer3_proto_reg_db2, &nfce_template);
 }
+
+void tcp_stack_register_l2_pkt_trap_rule(node_t *node, nfc_pkt_trap pkt_trap_cb, nfc_app_cb app_cb)
+{
+    notif_chain_elem_t nfce_template;
+    memset(&nfce_template, 0, sizeof(notif_chain_elem_t));
+    nfce_template.is_key_set = false;
+    nfce_template.app_cb = app_cb;
+    nfce_template.pkt_trap_cb = pkt_trap_cb;
+
+    init_glthread(&nfce_template.glue);
+    nfc_register_notif_chain(&node->layer2_proto_reg_db2, &nfce_template);
+}
+
+void tcp_stack_de_register_l2_pkt_trap_rule(node_t *node, nfc_pkt_trap pkt_trap_cb, nfc_app_cb app_cb)
+{
+    notif_chain_elem_t nfce_template;
+    memset(&nfce_template, 0, sizeof(notif_chain_elem_t));
+    nfce_template.is_key_set = false;
+    nfce_template.app_cb = app_cb;
+    nfce_template.pkt_trap_cb = pkt_trap_cb;
+
+    init_glthread(&nfce_template.glue);
+    nfc_de_register_notif_chain(&node->layer2_proto_reg_db2, &nfce_template);
+}

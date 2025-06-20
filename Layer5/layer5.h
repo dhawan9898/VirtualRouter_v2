@@ -22,4 +22,7 @@ void tcp_app_register_l2_protocol_interest(uint32_t L5_protocol, nfc_app_cb app_
 
 void tcp_app_register_l3_protocol_interest(uint32_t L5_protocol, nfc_app_cb app_layer_cb);
 
+void tcp_stack_register_l2_pkt_trap_rule(node_t *node, nfc_pkt_trap pkt_trap_cb, nfc_app_cb app_cb);
+void tcp_stack_de_register_l2_pkt_trap_rule(node_t *node, nfc_pkt_trap pkt_trap_cb, nfc_app_cb app_cb);
+
 #endif
