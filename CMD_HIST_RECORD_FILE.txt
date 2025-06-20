@@ -325,3 +325,12 @@ show node R0 rt
 show node R0 proto isis
 show node R0 proto isis
 show node R0 proto isis
+config node R0 proto isis interface all
+config node R1 proto isis
+show node R1 proto isis
+config node R1 proto isis interface eth1
+show node R1 proto isis
+config node R1 proto isis interface all
+show node R1 proto isis
+config node R1 no protocol isis interface all
+show node R1 proto isis

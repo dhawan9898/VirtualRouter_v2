@@ -134,4 +134,12 @@ static inline uint32_t get_link_cost(interface_t *interface)
     return interface->link->cost;
 }
 
+#define ITERATE_NODE_INTERFACES_BEGIN(node_ptr, intf_ptr) \
+{                                                         \
+    int _i = 0;                                           \
+    for(; _i < MAX_IF_PER_NODE; _i++){                    \
+        intf_ptr = node_ptr->intf[_i];                    \
+        if(!intf_ptr) continue;
+
+#define ITERATE_NODE_INTERFACES_END(node_ptr, intf_ptr) }}
 #endif //GRAPH_H
