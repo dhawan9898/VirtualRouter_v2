@@ -335,3 +335,22 @@ show node R1 proto isis
 config node R1 no protocol isis interface all
 show node R1 proto isis
 .
+conf node R1 proto isis /
+int eth2
+cd
+conf node R1 proto isis
+show node R1 proto isis
+conf node R1 proto isis interface eth2
+show node R1 proto isis
+conf node R1 proto isis /
+interface eth2
+conf node R1 proto isis /
+conf node R1 proto isis /
+conf node R1 proto isis /
+conf node R1 proto isis
+conf node R1 proto isis /
+conf node R1 proto isis /
+interface eth2
+cd
+show node R1 int stat
+show node R1 int stat

@@ -174,6 +174,21 @@ void ip_addr_n_to_p(unsigned int ip_addr, char *ip_addr_str)
 
 }
 
+char *tcp_ip_covert_ip_n_to_p(uint32_t ip_addr, char *output_buffer)
+{
+    char *out = NULL;
+    char ip_string[16];
+    out = !output_buffer ? ip_string : output_buffer;
+    memset(out, 0, 16);
+    ip_addr_n_to_p(ip_addr, out);
+    return out;
+}
+
+uint32_t tcp_ip_covert_ip_p_to_n(char *ip_addr)
+{
+    return ip_addr_p_to_n(ip_addr);
+}
+
 /* returns the local interface of the node which is configured with the subnet in which  "ip-addr" lies */
 interface_t *node_get_matching_subnet_interface(node_t *node, char *ip_addr)
 {

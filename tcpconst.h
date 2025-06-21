@@ -19,9 +19,14 @@
 
 
 
-#define IP_HDR_INCLUDED (1  << 0)
+#define IP_HDR_INCLUDED         (1 << 0)
 #define DATA_LINK_HDR_INCLUDED  (1 << 1)
 
-#define INTF_METRIC_DEFAULT 1
+#define INTF_METRIC_DEFAULT           14
+
+#define PKT_BUFFER_RIGHT_ROOM        128
+
+
+#define MAX_PACKET_BUFFER_SIZE 2048U
 
 #endif

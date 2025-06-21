@@ -37,6 +37,7 @@ struct _wheel_timer_elem_t{
     glthread_t reschedule_glue;
     unsigned int N_scheduled;
     wheel_timer_t *wt;
+    pthread_mutex_t mutex;
 };
 
 GLTHREAD_TO_STRUCT(glthread_to_wt_elem, wheel_timer_elem_t, glue);
@@ -97,6 +98,26 @@ struct _wheel_timer_t {
 
 #define WT_GET_RESCHD_SLOTLIST_HEAD(wt_ptr) \
     (&((WT_GET_RESCHD_SLOTLIST(wt_ptr))->slots))
+
+static inline void wt_elem_lock(wheel_timer_elem_t *wt_elem)
+{
+    pthread_mutex_lock(&wt_elem->mutex);
+}
+
+static inline void wt_elem_unlock(wheel_timer_elem_t *wt_elem)
+{
+    pthread_mutex_unlock(&wt_elem->mutex);
+}
+
+static inline void *wt_elem_get_and_set_app_data(wheel_timer_elem_t *wt_elem, void *new_data)
+{
+    void *old_data = NULL;
+    wt_elem_lock(wt_elem);
+    old_data = wt_elem->arg;
+    wt_elem->arg = new_data;
+    wt_elem_unlock(wt_elem);
+    return old_data;
+}
 
 wheel_timer_t *init_wheel_timer(int wheel_size, int clock_tic_interval);
 

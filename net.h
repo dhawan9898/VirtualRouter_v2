@@ -7,6 +7,7 @@
 #include <memory.h>
 #include "tcp_ip_trace.h"
 #include "WheelTimer/WheelTimer.h"
+#include "tcpconst.h"
 
 
 #define TRUE  1U
@@ -71,6 +72,7 @@ typedef struct node_nw_prop_{
 typedef struct intf_nw_prop_{
     /* L1 Properties */
     bool_t is_up;
+    uint32_t ifindex;
 
     /* L2 Properties */
     mac_add_t mac_addr;
@@ -133,11 +135,13 @@ static inline void init_intf_nw_prop(intf_nw_prop_t *intf_nw_prop)
     intf_nw_prop->pkt_sent = 0U;
 }
 
-#define IF_IS_UP(intf_ptr) ((intf_ptr)->intf_nw_prop.is_up == TRUE)
 
 #define IF_MAC(intf_ptr) ((intf_ptr)->intf_nw_prop.mac_addr.mac_addr)
 #define IF_IP(intf_ptr)  ((intf_ptr)->intf_nw_prop.ip_addr.ip_addr)
+#define IF_IP_EXIST(intf_ptr) ((intf_ptr)->intf_nw_prop.is_ipadd_config)
 #define IF_MASK(intf_ptr) ((intf_ptr)->intf_nw_prop.mask)
+#define IF_IS_UP(intf_ptr) ((intf_ptr)->intf_nw_prop.is_up == TRUE)
+#define IF_INDEX(intf_ptr) ((intf_ptr)->intf_nw_prop.ifindex)
 #define NODE_LO_ADDRESS(node_ptr)  ((node_ptr)->node_nw_prop.lb_addr.ip_addr)
 #define NODE_ARP_TABLE(node_ptr)   ((node_ptr)->node_nw_prop.arp_table)
 #define NODE_MAC_TABLE(node_ptr)   ((node_ptr)->node_nw_prop.mac_table)
@@ -181,6 +185,10 @@ char *pkt_buffer_shift_right(char *pkt, unsigned int pkt_size, unsigned int tota
 
 unsigned int ip_addr_p_to_n(char *ip_addr);
 
+char *tcp_ip_covert_ip_n_to_p(uint32_t ip_addr, char *output_buffer);
+
+uint32_t tcp_ip_covert_ip_p_to_n(char *ip_addr);
+
 void ip_addr_n_to_p(unsigned int ip_addr, char *ip_addr_str);
 
 interface_t *node_get_matching_subnet_interface(node_t *node, char *ip_addr);
@@ -212,6 +220,17 @@ static inline char *intf_l2_mode_str(intf_l2_mode_t intf_l2_mode)
             return "L2_MODE_UNKNOWN";
 
     }
+}
+
+static inline char *tcp_ip_get_new_pkt_buffer(uint32_t pkt_size){
+
+    char *pkt = calloc(1, MAX_PACKET_BUFFER_SIZE);
+    return pkt_buffer_shift_right(pkt, pkt_size, MAX_PACKET_BUFFER_SIZE);
+}
+
+static inline void tcp_ip_free_pkt_buffer(char *pkt, uint32_t pkt_size){
+
+    free(pkt - MAX_PACKET_BUFFER_SIZE - pkt_size - PKT_BUFFER_RIGHT_ROOM);
 }
 
 #endif /* NET_H */

@@ -77,8 +77,7 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
     return 0;
 }
 
-static int
-isis_intf_config_handler(param_t *param,
+static int isis_intf_config_handler(param_t *param,
                                  ser_buff_t *tlv_buff,
                                  op_mode enable_or_disable) {
 
@@ -161,6 +160,7 @@ isis_intf_config_handler(param_t *param,
 int isis_config_cli_tree(param_t *param){
 
     {
+        /* config node <node-name> protocol isis */
         static param_t isis_proto;
         init_param(&isis_proto, CMD, "isis", isis_config_handler, 0, INVALID, 0, "isis protocol");
         libcli_register_param(param, &isis_proto);

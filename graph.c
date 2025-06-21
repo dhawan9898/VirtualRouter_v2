@@ -102,8 +102,8 @@ void dump_interface(interface_t *interface)
     node_t *node = interface->att_node;
     node_t *nbr_node = get_nbr_node(interface);
 
-    printf("Interface Name: %s\n\t Local Node: %s, Nbr node: %s, cost: %u\n", interface->if_name, 
+    printf("Interface Name: %s\n\t Local Node: %s, Nbr node: %s, cost: %u, ifindex = %u\n", interface->if_name, 
                                                                               node->node_name, 
                                                                               nbr_node->node_name, 
-                                                                              link->cost);
+                                                                              link->cost, IF_INDEX(interface));
 }
