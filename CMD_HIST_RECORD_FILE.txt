@@ -334,3 +334,4 @@ config node R1 proto isis interface all
 show node R1 proto isis
 config node R1 no protocol isis interface all
 show node R1 proto isis
+.

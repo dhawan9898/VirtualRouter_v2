@@ -4,6 +4,12 @@
 #include "isis_rtr.h"
 
 
+static void isis_init_isis_intf_info(interface_t *intf)
+{
+    ((isis_intf_info_t *)(intf->intf_nw_prop.isis_intf_info))->cost = 0U;
+    ((isis_intf_info_t *)(intf->intf_nw_prop.isis_intf_info))->hello_interval = 10U;
+}
+
 bool isis_is_protocol_enable_on_node_intf(interface_t *interface)
 {
     if(ISIS_INTF_INFO(interface))
@@ -30,6 +36,8 @@ void isis_enable_protocol_on_interface(interface_t *intf)
 
     isis_intf_info = calloc(1, sizeof(isis_intf_info_t));
     intf->intf_nw_prop.isis_intf_info = isis_intf_info;
+
+    isis_init_isis_intf_info(intf);
 }
 
 void isis_disable_protocol_on_interface(interface_t *intf)

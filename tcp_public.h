@@ -22,6 +22,10 @@
 #include "CommandParser/libcli.h"
 #include "CommandParser/cmdtlv.h"
 
+#include "WheelTimer/WheelTimer.h"
+
 extern graph_t *topo;
+
+typedef wheel_timer_elem_t timer_event_handle;
 
 #endif
