@@ -3,6 +3,54 @@
 #include "isis_const.h"
 #include "isis_intf.h"
 #include "isis_rtr.h"
+#include "layer5.h"
+
+static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, uint32_t pkt_size)
+{
+    uint32_t rc = 0;
+    char *ip_addr_str;
+    byte tlv_type;
+    byte tlv_len;
+    byte *tlv_value = NULL;
+
+    byte *hello_tlv_buffer = (byte *)(hello_pkt_hdr + 1U);
+    uint32_t hello_tlv_buffer_size = pkt_size - sizeof(isis_pkt_hdr_t);
+
+    rc = sprintf (buff, "ISIS_PTP_HELLO_PKT_TYPE : ");
+
+    ITERATE_TLV_BEGIN(hello_tlv_buffer , tlv_type, tlv_len, tlv_value, hello_tlv_buffer_size){
+
+        switch(tlv_type){
+            case ISIS_TLV_IF_INDEX:
+                rc += sprintf(buff + rc, "%d %d %u :: ", tlv_type, tlv_len, *(uint32_t *)(tlv_value));
+            break;
+            case ISIS_TLV_HOSTNAME:
+                rc += sprintf(buff + rc, "%d %d %s :: ", tlv_type, tlv_len, tlv_value);
+                break;
+            case ISIS_TLV_RTR_ID:
+            case ISIS_TLV_IF_IP:
+                ip_addr_str = tcp_ip_covert_ip_n_to_p(*(uint32_t *)tlv_value, 0);
+                rc += sprintf(buff + rc, "%d %d %s :: ", tlv_type, tlv_len, ip_addr_str);
+                break;
+            case ISIS_TLV_HOLD_TIME:
+                rc += sprintf(buff + rc, "%d %d %u :: ", tlv_type, tlv_len, *(uint32_t *)tlv_value);
+                break;
+            case ISIS_TLV_METRIC_VAL:
+                rc += sprintf(buff + rc, "%d %d %u :: ", tlv_type, tlv_len, *(uint32_t *)tlv_value);
+                break;
+            case ISIS_TLV_IF_MAC:
+                rc += sprintf(buff + rc, "%d %d %02x:%02x:%02x:%02x:%02x:%02x :: ",
+                     tlv_type, tlv_len, tlv_value[0], tlv_value[1], tlv_value[2],
+                     tlv_value[3], tlv_value[4], tlv_value[5]);
+                break;    
+            default:    ;
+        }
+
+    } ITERATE_TLV_END(hello_tlv_buffer, tlv_type, tlv_len, tlv_value, hello_tlv_buffer_size)
+    
+    rc -= strlen(" :: ");
+    return rc;
+}
 
 bool isis_pkt_trap_rule(char *pkt, size_t pkt_size){
 
@@ -13,7 +61,27 @@ bool isis_pkt_trap_rule(char *pkt, size_t pkt_size){
 
 void isis_pkt_receive(void *arg, size_t arg_size)
 {
+    pkt_notif_data_t *pkt_notif_data = (pkt_notif_data_t *)arg;
+    node_t *node = pkt_notif_data->recv_node;
+    interface_t *iif = pkt_notif_data->recv_interface;
+    ethernet_frame_t *hello_eth_hdr = (ethernet_frame_t *)pkt_notif_data->pkt;
+    uint32_t pkt_size = pkt_notif_data->pkt_size;
 
+    if(!isis_is_protocol_enable_on_node(node)){
+        return;
+    }
+
+    isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(hello_eth_hdr);
+    switch(isis_pkt_hdr->isis_pkt_type){
+        case ISIS_PTP_HELLO_PKT_TYPE:
+            printf("%s: ISIS - Hello pkt received\n",__FUNCTION__);
+            break;
+        case ISIS_LSP_PKT_TYPE:
+            printf("%s: ISIS - LSP pkt received\n", __FUNCTION__);
+            break;
+        default:
+            ;
+    }
 }
 
 byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size)

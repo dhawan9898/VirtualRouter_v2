@@ -78,7 +78,7 @@ static int _send_pkt_out(int sock_fd, char *pkt_data, unsigned int pkt_size, uns
     struct sockaddr_in dest_addr;
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = dst_udp_port_no;
-
+    printf("%s: sending the pkt out ....\n", __FUNCTION__);
     #if 0 // not working
     int dst_addr_int;
     char *localhost = "127.0.0.1";
@@ -91,6 +91,7 @@ static int _send_pkt_out(int sock_fd, char *pkt_data, unsigned int pkt_size, uns
     dest_addr.sin_addr = *((struct in_addr *)host->h_addr);
     
     rc = sendto(sock_fd, pkt_data, pkt_size, 0, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
+    printf("%s: Frame sent using sendto() function, which returns %d\n", __FUNCTION__, rc);
 
     return rc;
 }
@@ -193,7 +194,7 @@ int send_pkt_out(char *pkt, unsigned int pkt_size, interface_t *interface)
     strncpy(pkt_with_aux_data, other_interface->if_name, IF_NAME_SIZE);
     pkt_with_aux_data[15] = '\0';
     memcpy(pkt_with_aux_data + IF_NAME_SIZE, pkt, pkt_size);
-
+    printf("%s: sending the pkt out ....\n", __FUNCTION__);
     rc = _send_pkt_out(sock_fd, pkt_with_aux_data, pkt_size + IF_NAME_SIZE, dst_udp_port_no);
     close(sock_fd);
 

@@ -7,9 +7,6 @@
 #include "isis_pkt.h"
 #include "isis_const.h"
 
-#define timer_register_app_event register_app_event
-#define timer_de_register_app_event de_register_app_event
-
 bool isis_node_intf_is_enable(interface_t *intf) {
 
     return !(intf->intf_nw_prop.isis_intf_info == NULL);
@@ -55,8 +52,10 @@ void isis_enable_protocol_on_interface(interface_t *intf)
     isis_intf_info->cost = ISIS_DEFAULT_INTF_COST;
 
     if(isis_intf_info->hello_xmit_timer == NULL){
-        if(isis_interface_qualify_to_send_hellos(intf))
+        if(isis_interface_qualify_to_send_hellos(intf)){
+            printf("%s: Start sending hello pkts\n", __FUNCTION__);
             isis_start_sending_hellos(intf);
+        }
     }
 }
 
@@ -64,7 +63,7 @@ void isis_disable_protocol_on_interface(interface_t *intf)
 {
     isis_intf_info_t *isis_intf_info = NULL;
     isis_intf_info = intf->intf_nw_prop.isis_intf_info;
-    if(!isis_intf_info)
+    if(isis_intf_info)
         free(isis_intf_info);
     intf->intf_nw_prop.isis_intf_info = NULL;
     isis_stop_sending_hellos(intf);
@@ -88,12 +87,13 @@ void isis_start_sending_hellos(interface_t *intf)
     isis_timer_data->data = (void *)hello_pkt;
     isis_timer_data->data_size = hello_pkt_size;
 
-    ISIS_INTF_HELLO_XMIT_TIMER(intf)  = timer_register_app_event(wt, 
+    ISIS_INTF_HELLO_XMIT_TIMER(intf)  = register_app_event(wt, 
                                               isis_transmit_hello,
                                               (void *)isis_timer_data,
-                                              sizeof(isis_timer_data_t),
-                                              ISIS_INTF_HELLO_INTERVAL(intf) * 1000,
+                                              sizeof(isis_timer_data_t), 3,
+                                              //ISIS_INTF_HELLO_INTERVAL(intf) * 1000,
                                               1);
+    //printf("%s\n",__FUNCTION__);
 }
 
 void isis_stop_sending_hellos(interface_t *intf) {
@@ -110,6 +110,6 @@ void isis_stop_sending_hellos(interface_t *intf) {
 
     free(isis_timer_data);
 
-    timer_de_register_app_event(hello_xmit_timer);
+    de_register_app_event(hello_xmit_timer);
     ISIS_INTF_HELLO_XMIT_TIMER(intf) = NULL;
 }

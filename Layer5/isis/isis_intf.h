@@ -43,6 +43,7 @@ static void isis_transmit_hello(void *arg, uint32_t arg_size) {
 
     send_pkt_out(hello_pkt, pkt_size, intf);
     ISIS_INTF_INCREMENT_STATS(intf, hello_pkt_sent);
+    printf("%s\n",__FUNCTION__);
 }
 
 #endif

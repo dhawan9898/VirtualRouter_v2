@@ -410,5 +410,7 @@ cross_link_topology(){
     node_set_intf_ip_address(R5, "eth12","70.1.1.1", 24);
     node_set_intf_ip_address(R5, "eth15","80.1.1.2", 24);
 
+    network_start_pkt_receiver_thread(topo);
+
     return topo;
 }

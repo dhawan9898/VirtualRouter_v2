@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include "../glueThread/glthread.h"
+#include "timerlib.h"
 
 typedef struct _wheel_timer_elem_t wheel_timer_elem_t;
 typedef void (*app_call_back)(void *arg, uint32_t sizeof_arg);
@@ -13,6 +14,13 @@ typedef struct slotlist_{
     glthread_t slots;
     pthread_mutex_t slot_mutex;
 }slotlist_t;
+
+typedef enum {
+
+	TIMER_SECONDS,
+	TIMER_MILLI_SECONDS
+} timer_resolution_t;
+
 
 typedef enum{
     WTELEM_CREATE,
@@ -51,6 +59,7 @@ struct _wheel_timer_t {
 	pthread_t wheel_thread;
     slotlist_t reschd_list;
     unsigned int no_of_wt_elem;
+    timer_resolution_t timer_resolution;
     slotlist_t slotlist[0];
 };
 
@@ -119,7 +128,7 @@ static inline void *wt_elem_get_and_set_app_data(wheel_timer_elem_t *wt_elem, vo
     return old_data;
 }
 
-wheel_timer_t *init_wheel_timer(int wheel_size, int clock_tic_interval);
+wheel_timer_t *init_wheel_timer(int wheel_size, int clock_tic_interval, timer_resolution_t timer_resolution);
 
 int wt_get_remaining_time(wheel_timer_elem_t *wt_elem);
 

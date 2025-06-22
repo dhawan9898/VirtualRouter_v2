@@ -16,6 +16,7 @@
 #define ISIS_TLV_HOLD_TIME                5
 #define ISIS_TLV_METRIC_VAL               6
 #define ISIS_TLV_IF_INDEX                 4  // as per standard
+#define ISIS_TLV_MAC_ADDR               112
 
 #define ISIS_IS_REACH_TLV  22 // as per standard 0
 #define ISIS_TLV_LOCAL_IP   6 // as per standard

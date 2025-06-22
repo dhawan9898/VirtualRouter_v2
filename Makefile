@@ -22,6 +22,7 @@ OBJS=glueThread/glthread.o	\
 		tcp_ip_stack_init.o	\
 		notif.o				\
 		WheelTimer/WheelTimer.o	\
+		WheelTimer/timerlib.o	\
 		Layer5/isis/isis_cli.o	\
 		Layer5/isis/isis_rtr.o	\
 		Layer5/isis/isis_intf.o	\
@@ -96,6 +97,9 @@ notif.o:notif.c
 
 WheelTimer/WheelTimer.o:WheelTimer/WheelTimer.c
 	${CC} ${CFLAGS} -c WheelTimer/WheelTimer.c -I . -I WheelTimer/ -o WheelTimer/WheelTimer.o
+
+WheelTimer/timerlib.o:WheelTimer/timerlib.c
+	${CC} ${CFLAGS} -c WheelTimer/timerlib.c -I . -I WheelTimer/ -o WheelTimer/timerlib.o
 
 Layer5/isis/isis_cli.o:Layer5/isis/isis_cli.c
 	${CC} ${CFLAGS} -c Layer5/isis/isis_cli.c -I . -I Layer5/ -o Layer5/isis/isis_cli.o

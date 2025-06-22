@@ -354,3 +354,57 @@ interface eth2
 cd
 show node R1 int stat
 show node R1 int stat
+conf node R1 proto isis
+show node R1 proto isis
+conf node R1 proto isis int eth2
+show node R1 proto isis
+show node R1 interface statistics
+conf node R1 proto isis /
+interface eth2
+conf node R1 proto isis /
+int eth2
+cd 
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+run node R1 ping 122.1.1.2
+conf node R1 proto isis /
+cd
+show node R1 proto isis
+conf node R1 proto isis int eth0
+show node R1 int stat
+run node R1 ping 122.1.1.2
+show node R1 int stat
+show node R2 inter stat
+run node R1 ping 122.1.1.2
+show node R1 int stat
+show node R1 int stat
+show node R1 proto isis
+conf node R1 proto isis /
+int eth2
+cd
+show node R1 int stat
+run node R1 ping 122.1.1.3
+show node R1 proto isis
+conf node R1 proto isis /
+int eth2
+show node R1 proto isis
+conf node R1 proto isis /
+int eth2
+cd
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+conf node R1 proto isis /
+interface eth2
+cd
+config node R2 proto isis /
+int eth3
+cd
+show node R1 interface statistics

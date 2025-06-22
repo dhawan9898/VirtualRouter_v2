@@ -24,15 +24,25 @@ int insert_wt_elem_in_slot(void *data1, void *data2){
    return 0;
 }
 
-wheel_timer_t *init_wheel_timer(int wheel_size, int clock_tic_interval){
+wheel_timer_t *init_wheel_timer(int wheel_size, int clock_tic_interval, timer_resolution_t timer_resolution){
 
 	wheel_timer_t *wt = calloc(1, sizeof(wheel_timer_t) + 
 				(wheel_size * sizeof(slotlist_t)));
 
 	wt->clock_tic_interval = clock_tic_interval;
 	wt->wheel_size = wheel_size;
+#if 0
+	wt->wheel_thread = setup_timer(wheel_fn,
+        timer_resolution == TIMER_MILLI_SECONDS ? \
+            wt->clock_tic_interval : wt->clock_tic_interval * 1000,
+        timer_resolution == TIMER_MILLI_SECONDS ? \
+            wt->clock_tic_interval : wt->clock_tic_interval * 1000,
+        0,
+        (void *)wt,
+        false);
 
-    memset(&(wt->wheel_thread), 0, sizeof(wheel_timer_t));
+    wt->timer_resolution = timer_resolution;
+#endif
 
 	int i = 0;
 	for(; i < wheel_size; i++){
@@ -185,11 +195,31 @@ static void _wt_elem_reschedule(wheel_timer_t *wt, wheel_timer_elem_t *wt_elem,
     }
 }
 
+static uint32_t wt_get_clock_interval_in_millisec(wheel_timer_t *wt) {
+
+	uint32_t clock_tick_interval_in_milli_sec;
+
+	clock_tick_interval_in_milli_sec = 
+		wt->timer_resolution == TIMER_MILLI_SECONDS ? 
+		wt->clock_tic_interval :
+		wt->clock_tic_interval * 1000;
+
+	return clock_tick_interval_in_milli_sec;
+}
 
 wheel_timer_elem_t *register_app_event(wheel_timer_t *wt, app_call_back call_back, void *arg,
 		                                int arg_size, int time_interval, char is_recursive){
 
 	if(!wt || !call_back) return NULL;
+
+    #if 0
+    uint32_t clock_tic_interval_in_millisec = wt_get_clock_interval_in_millisec(wt);
+
+    if((!time_interval || (time_interval % clock_tic_interval_in_millisec)) != 0){
+        assert(0);
+    }
+    #endif
+
 	wheel_timer_elem_t *wt_elem = calloc(1, sizeof(wheel_timer_elem_t));
 	wt_elem->app_callback  = call_back;
     if(arg && arg_size){
@@ -201,12 +231,14 @@ wheel_timer_elem_t *register_app_event(wheel_timer_t *wt, app_call_back call_bac
     init_glthread(&wt_elem->reschedule_glue);
     wt_elem->N_scheduled = 0;
 	wt_elem->wt = wt;
+    pthread_mutex_init(&wt_elem->mutex, NULL);
     _wt_elem_reschedule(wt, wt_elem, time_interval, WTELEM_CREATE);
     return wt_elem;
 }
 
 void de_register_app_event(wheel_timer_elem_t *wt_elem){
 
+    wt_elem_get_and_set_app_data(wt_elem, 0); // just clearing the wt_elem structure
     _wt_elem_reschedule(wt_elem->wt, wt_elem, 0, WTELEM_DELETE);
 }
 

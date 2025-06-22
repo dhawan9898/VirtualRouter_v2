@@ -2,6 +2,7 @@
 #include "isis_rtr.h"
 #include "isis_pkt.h"
 #include "isis_intf.h"
+#include "layer5.h"
 
 bool isis_is_protocol_enable_on_node(node_t *node)
 {
