@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 
-#define MAX_NOTIF_KEY_SIZE 64U
+#define MAX_NOTIF_KEY_SIZE 1536U
 
 typedef bool bool_t;
 

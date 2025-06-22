@@ -82,7 +82,7 @@ void nfc_invoke_notif_chain(notif_chain_t *nfc, void *arg, size_t arg_size, char
     glthread_t *curr;
     notif_chain_elem_t *nfce;
 
-    assert(key_size < MAX_NOTIF_KEY_SIZE);
+    assert(key_size <= MAX_NOTIF_KEY_SIZE);
 
     ITERATE_GLTHREAD_BEGIN(&nfc->notif_chain_head, curr){
 

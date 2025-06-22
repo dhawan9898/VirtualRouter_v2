@@ -408,3 +408,25 @@ config node R2 proto isis /
 int eth3
 cd
 show node R1 interface statistics
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
+conf node R1 traceoptions flag all
+config node R1 proto isis /
+int eth2
+cd
+config node R2 proto isis /
+cd
+config node R1 traceoptions flag stdout
+conf node R1 proto isis /
+int eth2
+cd
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
