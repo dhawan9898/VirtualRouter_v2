@@ -430,3 +430,16 @@ cd
 conf node R2 proto isis /
 int eth3
 cd
+conf node R1 proto isis /
+int eth2
+cd..
+cd..
+cd..
+R2 proto isis /
+int eth3
+cd
+co
+node R1 /
+traceoptions /
+flag /
+all

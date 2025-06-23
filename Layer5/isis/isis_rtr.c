@@ -3,6 +3,7 @@
 #include "isis_pkt.h"
 #include "isis_intf.h"
 #include "layer5.h"
+#include "isis_const.h"
 
 bool isis_is_protocol_enable_on_node(node_t *node)
 {
@@ -51,4 +52,10 @@ void isis_de_init(node_t *node)
         node->node_nw_prop.isis_node_info = node_info;
     }
     tcp_stack_de_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
+}
+
+void isis_one_time_registration(void)
+{
+    nfc_intf_register_for_events(isis_interface_updates);
+    nfc_register_for_pkt_tracing(ISIS_ETH_PKT_TYPE, isis_print_pkt);
 }

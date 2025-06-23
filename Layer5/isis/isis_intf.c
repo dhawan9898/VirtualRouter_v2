@@ -113,3 +113,8 @@ void isis_stop_sending_hellos(interface_t *intf) {
     de_register_app_event(hello_xmit_timer);
     ISIS_INTF_HELLO_XMIT_TIMER(intf) = NULL;
 }
+
+void isis_interface_updates(void *arg, size_t arg_size)
+{
+    
+}

@@ -52,6 +52,11 @@ static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, 
     return rc;
 }
 
+static uint32_t isis_print_lsp_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, uint32_t pkt_size)
+{
+
+}
+
 bool isis_pkt_trap_rule(char *pkt, size_t pkt_size){
 
     ethernet_frame_t *eth_pkt = (ethernet_frame_t *)pkt;
@@ -126,3 +131,29 @@ byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size)
     return (byte *)hello_eth_hdr;
 }
 
+void isis_print_pkt(void *arg, size_t arg_size)
+{
+    pkt_info_t *pkt_info;
+    pkt_info = (pkt_info_t *)arg;
+    byte *buff = pkt_info->pkt_print_buffer;
+    size_t pkt_size = pkt_info->pkt_size;
+
+    isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)(pkt_info->pkt);
+    pkt_info->bytes_written = 0;
+    isis_pkt_type_t isis_pkt_type = isis_pkt_hdr->isis_pkt_type;
+
+    switch(isis_pkt_type)
+    {
+        case ISIS_PTP_HELLO_PKT_TYPE:
+        {
+            pkt_info->bytes_written += isis_print_hello_pkt(buff, isis_pkt_hdr, pkt_size);
+            break;
+        }
+        case ISIS_LSP_PKT_TYPE:
+        {
+            pkt_info->bytes_written += isis_print_lsp_pkt(buff, isis_pkt_hdr, pkt_size);
+        }
+        default:
+            ;
+    }
+}

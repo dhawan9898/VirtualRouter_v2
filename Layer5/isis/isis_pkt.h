@@ -19,4 +19,6 @@ void isis_pkt_receive(void *arg, size_t arg_size);
 
 byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size);
 
+void isis_print_pkt(void *arg, size_t arg_size);
+
 #endif

@@ -20,5 +20,6 @@ void isis_de_init(node_t *node);
 
 bool isis_is_protocol_enable_on_node(node_t *node);
 void isis_show_node_protocol_state(node_t *node);
+void isis_one_time_registration(void);
 
 #endif

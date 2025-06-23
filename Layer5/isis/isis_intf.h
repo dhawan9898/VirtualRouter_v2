@@ -28,6 +28,7 @@ void isis_enable_protocol_on_interface(interface_t *intf);
 void isis_disable_protocol_on_interface(interface_t *intf);
 void isis_start_sending_hellos(interface_t *intf);
 void isis_stop_sending_hellos(interface_t *intf);
+void isis_interface_updates(void *arg, size_t arg_size);
 
 
 static void isis_transmit_hello(void *arg, uint32_t arg_size) {
