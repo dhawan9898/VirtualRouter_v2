@@ -6,6 +6,9 @@
 #include "isis_rtr.h"
 #include "isis_pkt.h"
 #include "isis_const.h"
+#include "tcp_ip_trace.h"
+
+extern char tlb[TCP_LOG_BUFFER_LEN];
 
 bool isis_node_intf_is_enable(interface_t *intf) {
 
@@ -50,6 +53,9 @@ void isis_enable_protocol_on_interface(interface_t *intf)
     intf->intf_nw_prop.isis_intf_info = isis_intf_info;
     isis_intf_info->hello_interval = ISIS_DEFAULT_HELLO_INTERVAL;
     isis_intf_info->cost = ISIS_DEFAULT_INTF_COST;
+
+    sprintf(tlb, "%s: Protocol is enabled on interface\n", ISIS_CONFIG_TRACE);
+    tcp_trace(intf->att_node, intf, tlb);
 
     if(isis_intf_info->hello_xmit_timer == NULL){
         if(isis_interface_qualify_to_send_hellos(intf)){
@@ -116,5 +122,5 @@ void isis_stop_sending_hellos(interface_t *intf) {
 
 void isis_interface_updates(void *arg, size_t arg_size)
 {
-    
+
 }

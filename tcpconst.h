@@ -26,7 +26,7 @@
 
 #define PKT_BUFFER_RIGHT_ROOM        128
 
-
+#define TCP_LOG_BUFFER_LEN	256
 #define MAX_PACKET_BUFFER_SIZE 2048U
 
 #endif

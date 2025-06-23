@@ -9,6 +9,7 @@
 #define TCP_PRINT_BUFFER_SIZE 1024
 #define TCP_GET_NODE_SEND_LOG_BUFFER(node) (node->node_nw_prop.send_log_buffer)
 
+
 typedef struct node_ node_t;
 typedef struct interface_ interface_t;
 typedef bool bool_t;
@@ -38,5 +39,10 @@ void tcp_dump_recv_logger(node_t *node, interface_t *intf, char *pkt, uint32_t p
 void tcp_dump_l3_fwding_logger(node_t *node, char *oif_name, char *gw_ip);
 void tcp_dump_send_logger(node_t *node, interface_t *intf, char *pkt, uint32_t pkt_size, hdr_type_t hdr_type);
 int traceoptions_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enable_or_disable);
+
+void init_tcp_logging(void);
+void tcp_trace_internal(node_t *node, interface_t *interface, char *buff, const char *fn, int lineno);
+
+#define tcp_trace(node, intf, buff)	tcp_trace_internal(node, intf, buff, __FUNCTION__, __LINE__);
 
 #endif

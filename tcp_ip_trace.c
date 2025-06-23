@@ -566,3 +566,35 @@ void tcp_ip_traceoptions_cli(param_t *node_name_param, node_t *intf_name_param)
         tcp_ip_build_intf_traceoptions_cli(intf_name_param);
     }
 }
+
+/* TCP Internal logging */
+static FILE *tcp_log_file;
+char tlb[TCP_LOG_BUFFER_LEN];
+
+void init_tcp_logging(void)
+{
+    tcp_log_file = fopen("logs/tcp_log_file", "w");
+    assert(tcp_log_file);
+    memset(tlb, 0, sizeof(tlb));
+}
+
+void tcp_trace_internal(node_t *node, interface_t *interface, char *buff, const char *fn, int lineno) {
+
+	char lineno_str[16];
+
+	fwrite(fn, sizeof(char), strlen(fn), tcp_log_file);
+	memset(lineno_str, 0, sizeof(lineno_str));
+	sprintf(lineno_str, " (%u) :", lineno);
+	fwrite(lineno_str, sizeof(char), strlen(lineno_str), tcp_log_file);	
+
+	if (node) {
+		fwrite(node->node_name, sizeof(char), strlen(node->node_name), tcp_log_file);
+		fwrite(":", sizeof(char), 1, tcp_log_file);
+	}
+	if (interface) {
+		fwrite(interface->if_name, sizeof(char), strlen(interface->if_name), tcp_log_file);
+		fwrite(":", sizeof(char), 1, tcp_log_file);
+	}
+    fwrite(buff, sizeof(char), strlen(buff), tcp_log_file);
+	fflush(tcp_log_file);
+}   
