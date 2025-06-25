@@ -2,6 +2,7 @@
 #include "isis_adjacency.h"
 #include "isis_intf.h"
 #include "isis_const.h"
+#include "isis_lsdb.h"
 
 static void isis_adjacency_start_delete_timer(isis_adjacency_t *adjacency)
 {
@@ -42,15 +43,15 @@ void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tl
 
             case ISIS_TLV_HOSTNAME:
                 if(memcmp(adjacency->nbr_name, tlv_value, tlv_len)){
+                    memcpy(adjacency->nbr_name, tlv_value, tlv_len);
                     nbr_attr_changed = true;
                     regen_lsp = true;
-                    memcpy(adjacency->nbr_name, tlv_value, tlv_len);
                 }
                 break;
             case ISIS_TLV_RTR_ID:
                 if(adjacency->nbr_rtr_id != *(uint32_t *)(tlv_value)){
-                    nbr_attr_changed = true;
                     adjacency->nbr_rtr_id = *(uint32_t *)(tlv_value);
+                    nbr_attr_changed = true;
                 }
                 break;
             case ISIS_TLV_IF_IP:
@@ -72,14 +73,58 @@ void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tl
                 adjacency->hold_time = *(uint32_t *)(tlv_value);
                 break;
             case ISIS_TLV_METRIC_VAL:
-
+            if(adjacency->cost != *(uint32_t *)(tlv_value)){
+                adjacency->cost = *(uint32_t *)(tlv_value);
+                nbr_attr_changed = true;
+                regen_lsp = true;
+            }
                 break;
             case ISIS_TLV_IF_MAC:
-
+            if(memcmp(adjacency->nbr_mac.mac_addr, (byte *)tlv_value, tlv_len)){
+                memcpy(adjacency->nbr_mac.mac_addr, tlv_value, tlv_len);
+                force_bring_down_adj = true;
+            }
                 break;
             default:
                 ;
         }
-
     }ITERATE_TLV_END(hello_tlv_buffer, tlv_type, tlv_len, tlv_value, tlkv_buff_size);
+
+    if(!new_adj){
+        isis_adj_state_t next_state;
+        if(force_bring_down_adj){
+            next_state = ISIS_ADJ_STATE_DOWN;
+        }
+        else{
+            next_state = isis_get_next_adj_state_on_receiving_next_hello(adjacency);
+        }
+        isis_change_adjacency_state(adjacency, next_state);
+    }
+
+    if(!new_adj && regen_lsp){
+        isis_schedule_lsp_pkt_generation(adjacency->intf->att_node);
+    }
+    ISIS_INTF_INCREMENT_STATS(iif, good_hello_pkt_recvd);
 }
+
+isis_adj_state_t isis_get_next_adj_state_on_receiving_next_hello(isis_adjacency_t *adjacency)
+{
+    switch(adjacency->adj_state){
+        case ISIS_ADJ_STATE_DOWN:
+            return ISIS_ADJ_STATE_INIT;
+        case ISIS_ADJ_STATE_INIT:
+            return ISIS_ADJ_STATE_UP;
+        case ISIS_ADJ_STATE_UP:
+            return ISIS_ADJ_STATE_UP;
+        default:
+            ;
+    }
+}
+
+void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t new_adj_state)
+{
+
+}
+
+
+

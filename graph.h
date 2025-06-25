@@ -43,13 +43,16 @@ struct node_{
 
     /* SPF calculation */
     spf_data_t *spf_data;
-    glthread_t graph_glue;
 
     /* Node Logging */
     log_t log_info;
 
     /* L2 net-filter hook (simplified) */
     notif_chain_t layer2_proto_reg_db2;
+
+    unsigned char *print_buff;
+
+    glthread_t graph_glue;
 };
 
 typedef struct graph_{
