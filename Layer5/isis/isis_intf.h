@@ -3,6 +3,8 @@
 
 #include "isis_rtr.h"
 
+typedef struct isis_adjacency_ isis_adjacency_t; /* Forward declaration */
+
 typedef struct isis_intf_info_{
 
     /* Cost associated with the interface */
@@ -11,7 +13,13 @@ typedef struct isis_intf_info_{
     uint32_t hello_interval;
     /* timer for sending hello pkts periodically */
     timer_event_handle *hello_xmit_timer;
+    isis_adjacency_t *adjacency;
     uint32_t hello_pkt_sent;
+    uint32_t good_hello_pkt_recvd;
+    uint32_t bad_hello_pkt_recvd;
+    uint32_t lsp_pkt_sent;
+    uint32_t good_lsp_pkt_recvd;
+    uint32_t bad_lsp_pkt_recvd;
 
 }isis_intf_info_t;
 
@@ -23,6 +31,7 @@ typedef struct isis_intf_info_{
 #define ISIS_INTF_INCREMENT_STATS(intf_ptr, pkt_type)  (((ISIS_INTF_INFO(intf_ptr))->pkt_type)++)
 
 bool isis_node_intf_is_enable(interface_t *intf);
+bool isis_interface_qualify_to_send_hellos(interface_t *intf);
 bool isis_is_protocol_enable_on_node_intf(interface_t *interface);
 void isis_enable_protocol_on_interface(interface_t *intf);
 void isis_disable_protocol_on_interface(interface_t *intf);

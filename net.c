@@ -174,7 +174,7 @@ void ip_addr_n_to_p(unsigned int ip_addr, char *ip_addr_str)
 
 }
 
-char *tcp_ip_covert_ip_n_to_p(uint32_t ip_addr, char *output_buffer)
+char *tcp_ip_convert_ip_n_to_p(uint32_t ip_addr, char *output_buffer)
 {
     char *out = NULL;
     char ip_string[16];
@@ -184,7 +184,7 @@ char *tcp_ip_covert_ip_n_to_p(uint32_t ip_addr, char *output_buffer)
     return out;
 }
 
-uint32_t tcp_ip_covert_ip_p_to_n(char *ip_addr)
+uint32_t tcp_ip_convert_ip_p_to_n(char *ip_addr)
 {
     return ip_addr_p_to_n(ip_addr);
 }

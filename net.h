@@ -185,9 +185,9 @@ char *pkt_buffer_shift_right(char *pkt, unsigned int pkt_size, unsigned int tota
 
 unsigned int ip_addr_p_to_n(char *ip_addr);
 
-char *tcp_ip_covert_ip_n_to_p(uint32_t ip_addr, char *output_buffer);
+char *tcp_ip_convert_ip_n_to_p(uint32_t ip_addr, char *output_buffer);
 
-uint32_t tcp_ip_covert_ip_p_to_n(char *ip_addr);
+uint32_t tcp_ip_convert_ip_p_to_n(char *ip_addr);
 
 void ip_addr_n_to_p(unsigned int ip_addr, char *ip_addr_str);
 

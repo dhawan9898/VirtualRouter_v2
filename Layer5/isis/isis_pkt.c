@@ -3,6 +3,7 @@
 #include "isis_const.h"
 #include "isis_intf.h"
 #include "isis_rtr.h"
+#include "isis_adjacency.h"
 #include "layer5.h"
 
 static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, uint32_t pkt_size)
@@ -29,7 +30,7 @@ static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, 
                 break;
             case ISIS_TLV_RTR_ID:
             case ISIS_TLV_IF_IP:
-                ip_addr_str = tcp_ip_covert_ip_n_to_p(*(uint32_t *)tlv_value, 0);
+                ip_addr_str = tcp_ip_convert_ip_n_to_p(*(uint32_t *)tlv_value, 0);
                 rc += sprintf(buff + rc, "%d %d %s :: ", tlv_type, tlv_len, ip_addr_str);
                 break;
             case ISIS_TLV_HOLD_TIME:
@@ -64,25 +65,84 @@ bool isis_pkt_trap_rule(char *pkt, size_t pkt_size){
     return (eth_pkt->type == ISIS_ETH_PKT_TYPE);
 }
 
+static void isis_process_hello_pkt(node_t *node, interface_t *iif, ethernet_frame_t *hello_eth_hdr, size_t pkt_size)
+{
+    /* Pkt robustness check */
+    /* 1. Reject the pkt if isis is not enabled in the interface */
+    if(!isis_node_intf_is_enable(iif)){
+        printf("%s: Error - ISIS Protocol not enabled for the interface\n", __FUNCTION__);
+        return;
+    }
+
+    /* 2. Check if interface is UP and has an IP address */
+    if(!isis_interface_qualify_to_send_hellos(iif)){
+        printf("%s: Error - Interface not UP or NO IP address configured\n", __FUNCTION__);
+        return;
+    }
+
+    /* 3. Reject if the dest MAC is not a broadcast address */
+    if(!IS_MAC_BROADCAST_ADDR(hello_eth_hdr->dst_mac.mac_addr)){
+        printf("%s: Error - Bad hello Packet, Dst MAC not broadcast type\n", __FUNCTION__);
+        assert(0);
+        goto bad_hello;
+    }
+
+    /* 4. Check if the hello pkt has the TLVs */
+    isis_pkt_hdr_t *hello_pkt_hdr = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(hello_eth_hdr);
+    byte *hello_tlv_buffer =  (byte *)(hello_pkt_hdr + 1U);
+    size_t tlv_buff_size = pkt_size - ETH_HDR_SIZE_EXCL_PAYLOAD - sizeof(isis_pkt_hdr_t);
+
+    uint8_t intf_ip_len;
+    uint32_t *if_ip_addr_int = (uint32_t *)tlv_buffer_get_particular_tlv(hello_tlv_buffer, tlv_buff_size, ISIS_TLV_IF_IP, &intf_ip_len);
+    if(!if_ip_addr_int){
+        printf("%s: Error - Bad hello Packet, doesn't have TLVs\n", __FUNCTION__);
+        assert(0);
+        goto bad_hello;
+    }
+
+    /* 5. Reject the pkt if neighbour node's interface Ip doesn't fall on the same subnet */
+    char *if_ip_addr_str = tcp_ip_convert_ip_n_to_p(*if_ip_addr_int, 0);
+    if(!is_same_subnet(IF_IP(iif), IF_MASK(iif) ,if_ip_addr_str)){
+        printf("%s: Error - Hello Pkt from different subnet\n", __FUNCTION__);
+        assert(0);
+        goto bad_hello;
+    }
+
+    /* 6. Accept the pkt, create adjacency */
+    isis_update_interface_adjacency_from_hello(iif, hello_tlv_buffer, tlv_buff_size);
+    return;
+
+    bad_hello:
+        printf("%s: Hello Pkt rejected on Node %s , interface %s\n", __FUNCTION__, node->node_name, iif->if_name);
+        ISIS_INTF_INCREMENT_STATS(iif, bad_hello_pkt_recvd);
+}
+
+static void isis_process_lsp_pkt(node_t *node, interface_t *iif, ethernet_frame_t *lsp_eth_hdr, size_t pkt_size)
+{
+
+}
+
 void isis_pkt_receive(void *arg, size_t arg_size)
 {
     pkt_notif_data_t *pkt_notif_data = (pkt_notif_data_t *)arg;
     node_t *node = pkt_notif_data->recv_node;
     interface_t *iif = pkt_notif_data->recv_interface;
-    ethernet_frame_t *hello_eth_hdr = (ethernet_frame_t *)pkt_notif_data->pkt;
+    ethernet_frame_t *eth_hdr = (ethernet_frame_t *)pkt_notif_data->pkt;
     uint32_t pkt_size = pkt_notif_data->pkt_size;
 
     if(!isis_is_protocol_enable_on_node(node)){
         return;
     }
 
-    isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(hello_eth_hdr);
+    isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_hdr);
     switch(isis_pkt_hdr->isis_pkt_type){
-        case ISIS_PTP_HELLO_PKT_TYPE:
+        case ISIS_PTP_HELLO_PKT_TYPE:     
             printf("%s: ISIS - Hello pkt received\n",__FUNCTION__);
+            isis_process_hello_pkt(node, iif, eth_hdr, pkt_size);
             break;
         case ISIS_LSP_PKT_TYPE:
             printf("%s: ISIS - LSP pkt received\n", __FUNCTION__);
+            isis_process_lsp_pkt(node, iif, eth_hdr, pkt_size);
             break;
         default:
             ;
@@ -109,7 +169,7 @@ byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size)
 
     hello_pkt_hdr = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(hello_eth_hdr);
     hello_pkt_hdr->isis_pkt_type = ISIS_PTP_HELLO_PKT_TYPE;
-    hello_pkt_hdr->rtr_id = tcp_ip_covert_ip_p_to_n(NODE_LO_ADDRESS(intf->att_node));
+    hello_pkt_hdr->rtr_id = tcp_ip_convert_ip_p_to_n(NODE_LO_ADDRESS(intf->att_node));
     hello_pkt_hdr->seq_no = 0; /* Ignored for now */
     hello_pkt_hdr->flags = 0;  /* ignored for now */
 
@@ -117,7 +177,7 @@ byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size)
     temp = tlv_buffer_insert_tlv(temp, ISIS_TLV_HOSTNAME, NODE_NAME_SIZE, node->node_name);
     temp = tlv_buffer_insert_tlv(temp, ISIS_TLV_RTR_ID, 4U, (byte *)&hello_pkt_hdr->rtr_id);
 
-    uint32_t ip_addr_int = tcp_ip_covert_ip_p_to_n(IF_IP(intf));
+    uint32_t ip_addr_int = tcp_ip_convert_ip_p_to_n(IF_IP(intf));
     uint32_t hold_time = ISIS_INTF_HELLO_INTERVAL(intf) * ISIS_HOLD_TIME_FACTOR;
     uint32_t cost = ISIS_INTF_COST(intf);
 
