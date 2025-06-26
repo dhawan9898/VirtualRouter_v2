@@ -4,9 +4,73 @@
 #include "isis_const.h"
 #include "isis_lsdb.h"
 
+static void isis_timer_expire_delete_adjacency_cb(void *arg, size_t arg_size)
+{
+    if(!arg)
+        return;
+    isis_adjacency_t *adjacency = (isis_adjacency_t *)arg;
+    interface_t *intf = adjacency->intf;
+    isis_intf_info_t *intf_info = ISIS_INTF_INFO(intf);
+    intf_info->adjacency = NULL;
+    de_register_app_event(adjacency->delete_timer);
+    adjacency->delete_timer = NULL;
+
+    assert(!adjacency->expiry_timer);
+    free(adjacency);
+}
+
 static void isis_adjacency_start_delete_timer(isis_adjacency_t *adjacency)
 {
+    if(adjacency->delete_timer)
+        return;
+    adjacency->delete_timer = register_app_event(node_get_timer_instance(adjacency->intf->att_node),
+                                                        isis_timer_expire_delete_adjacency_cb,
+                                                        (void *)adjacency, sizeof(isis_adjacency_t),
+                                                        ISIS_ADJ_DEFAULT_DELETE_TIME, 0);
 
+}
+
+static void isis_adjacency_stop_delete_timer(isis_adjacency_t *adjacency)
+{
+    if(!adjacency->delete_timer)
+        return;
+    de_register_app_event(adjacency->delete_timer);
+    adjacency->delete_timer = NULL;
+}
+
+static void isis_timer_expire_down_adjacency_cb(void *arg, size_t arg_size)
+{
+    if(!arg)
+        return;
+    isis_adjacency_t *adjacency = (isis_adjacency_t *)arg;
+    de_register_app_event(adjacency->expiry_timer);
+    adjacency->expiry_timer = NULL;
+
+    isis_change_adjacency_state(adjacency, ISIS_ADJ_STATE_DOWN);
+}
+
+static void isis_adjacency_start_expiry_timer(isis_adjacency_t *adjacency)
+{
+    if(adjacency->expiry_timer)
+        return;
+    adjacency->expiry_timer = register_app_event(node_get_timer_instance(adjacency->intf->att_node),
+                                                    isis_timer_expire_down_adjacency_cb,
+                                                    (void *)adjacency, sizeof(isis_adjacency_t),
+                                                    adjacency->hold_time, 0);
+}
+
+static void isis_adjacency_stop_expiry_timer(isis_adjacency_t *adjacency)
+{
+    if(!adjacency->expiry_timer)
+        return;
+    de_register_app_event(adjacency->expiry_timer);
+    adjacency->expiry_timer = NULL;
+}
+
+static void isis_adjacency_refresh_expiry_timer(isis_adjacency_t *adjacency)
+{
+    assert(adjacency->expiry_timer);
+    reschedule_timer(adjacency->expiry_timer, adjacency->hold_time, 0); //To revisit
 }
 
 void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces) {
