@@ -468,3 +468,29 @@ config node R1 proto isis /
 int eth2
 cd
 config node R1 traceoptions flag all
+conf node R1 proto isis /
+int eth2
+cd
+conf node R1 traceoptions flag all
+config node R1 proto isis /
+int eth2
+cd
+config node R1 traceoptions flag all
+config node R1 proto isis /
+int eth2
+cd
+config node R1 traceoptions flag all
+config node R1 proto isis /
+int eth
+int eth2
+cd
+config node R1 /
+traceoptions /
+flag /
+all
+show node R1 proto isis
+config node R1 proto isis /
+int eth2
+cd
+config node R2 proto isis /
+int eth3

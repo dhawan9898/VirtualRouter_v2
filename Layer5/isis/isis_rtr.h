@@ -10,7 +10,7 @@ typedef struct isis_timer_data_ {
 } isis_timer_data_t;
 
 typedef struct isis_node_info_{
-
+    uint16_t adj_up_count;
 }isis_node_info_t;
 
 #define ISIS_NODE_INFO(node_ptr) (isis_node_info_t *)((node_ptr)->node_nw_prop.isis_node_info)

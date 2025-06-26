@@ -31,6 +31,38 @@ bool isis_is_protocol_enable_on_node_intf(interface_t *interface)
     return false;
 }
 
+void isis_show_interface_protocol_state(interface_t *intf) {
+
+    bool is_enabled;
+    glthread_t *curr;
+    isis_adjacency_t *adjacency = NULL;
+    isis_intf_info_t *isis_intf_info = NULL;
+
+    is_enabled = isis_node_intf_is_enable(intf);
+
+    printf(" %s : %sabled\n", intf->if_name, is_enabled ? "En" : "Dis");
+    
+    if(!is_enabled) return;
+
+    isis_intf_info = ISIS_INTF_INFO(intf);
+  
+    PRINT_TABS(2);
+    printf("hello interval : %u sec, Intf Cost : %u\n",
+        isis_intf_info->hello_interval, isis_intf_info->cost);
+
+    PRINT_TABS(2);
+    printf("hello Transmission : %s\n",
+        ISIS_INTF_HELLO_XMIT_TIMER(intf) ? "On" : "Off");  
+
+    PRINT_TABS(2);
+    printf("Adjacencies :\n");
+
+   adjacency = isis_intf_info->adjacency;
+   if (!adjacency) return;
+   isis_show_adjacency(adjacency, 4);
+   printf("\n");
+}
+
 void isis_enable_protocol_on_interface(interface_t *intf)
 {
     isis_intf_info_t *isis_intf_info = NULL;

@@ -4,6 +4,7 @@
 #include <errno.h>
 #include "tcp_public.h"
 
+
 /* A buffer used to store the data to be written into
  * logging files when pkt is receieved. For writing a
  * data into logging files for pkt sentm we use node
@@ -108,6 +109,7 @@ static int tcp_dump_ip_hdr(char *buff, ip_hdr_t *ip_hdr, uint32_t pkt_size)
             break;
         }
         default:
+            rc += nfc_pkt_trace_invoke_notif_to_subscribers(ip_hdr->protocol, IP_PKT_PAYLOAD_PTR(ip_hdr), IP_PKT_PAYLOAD_SIZE(ip_hdr), buff + rc);
             break;
     }
 
@@ -190,6 +192,7 @@ static int tcp_dump_ethernet_hdr(char *buff, ethernet_frame_t *eth_hdr, uint32_t
             break;
         }
         default:
+            rc += nfc_pkt_trace_invoke_notif_to_subscribers(type, (char *)GET_ETHERNET_HDR_PAYLOAD(eth_hdr), payload_size, buff + rc);
             break;
     }
 
@@ -202,7 +205,7 @@ static FILE *initialize_node_log_file(node_t *node)
     memset(file_name, 0, sizeof(file_name));
     sprintf(file_name, "logs/%s.txt", node->node_name);
 
-    FILE *fptr = open(file_name, "w");
+    FILE *fptr = fopen(file_name, "w");
     if(!fptr){
         printf("%s: Could not create node log file %s, errorcode %d\n", file_name, errno);
         return 0;
@@ -217,7 +220,7 @@ static FILE *initialize_interface_log_file(interface_t *intf)
     node_t *node = intf->att_node;
     sprintf(file_name, "logs/%s-%s.txt", node->node_name, intf->if_name);
 
-    FILE *fptr = open(file_name, "w");
+    FILE *fptr = fopen(file_name, "w");
     if(!fptr){
         printf("%s: Could not create interface log file %s, errorcode %d\n", file_name, errno);
         return 0;

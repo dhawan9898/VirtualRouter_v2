@@ -16,13 +16,20 @@ bool isis_is_protocol_enable_on_node(node_t *node)
 void isis_show_node_protocol_state(node_t *node)
 {
     interface_t *intf;
+    isis_node_info_t *isis_node_info;
     printf("ISIS Protocol : %s\n", isis_is_protocol_enable_on_node(node) ? "Enable" : "Disable");
+
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+    
+    isis_node_info = ISIS_NODE_INFO(node);
+    printf("Adjacency up count: %u\n", isis_node_info->adj_up_count);
 
     ITERATE_NODE_INTERFACES_BEGIN(node, intf){
 
-        if(intf){
-            printf("%s : %s\n", intf->if_name, isis_is_protocol_enable_on_node_intf(intf) ? "Enable" : "Disable");
-        }
+        if(!isis_node_intf_is_enable(intf))
+            continue;
+        isis_show_interface_protocol_state(intf);
         
     }ITERATE_NODE_INTERFACES_END(node, intf);
 }

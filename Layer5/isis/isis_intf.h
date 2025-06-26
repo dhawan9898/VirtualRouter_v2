@@ -33,6 +33,7 @@ typedef struct isis_intf_info_{
 bool isis_node_intf_is_enable(interface_t *intf);
 bool isis_interface_qualify_to_send_hellos(interface_t *intf);
 bool isis_is_protocol_enable_on_node_intf(interface_t *interface);
+void isis_show_interface_protocol_state(interface_t *intf);
 void isis_enable_protocol_on_interface(interface_t *intf);
 void isis_disable_protocol_on_interface(interface_t *intf);
 void isis_start_sending_hellos(interface_t *intf);

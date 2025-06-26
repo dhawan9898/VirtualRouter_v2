@@ -50,15 +50,21 @@ static int isis_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mode ena
 static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enable_or_disable)
 {
     int cmdcode = -1;
-    cmdcode = EXTRACT_CMD_CODE(tlv_buff);
     tlv_struct_t *tlv = NULL;
     char *node_name;
     node_t *node;
+    char *rtr_id = NULL;
+    interface_t *intf = NULL;
+    char *intf_name = NULL;
+
+    cmdcode = EXTRACT_CMD_CODE(tlv_buff);
 
     TLV_LOOP_BEGIN(tlv_buff, tlv){
 
         if(strncmp(tlv->leaf_id, "node-name", strlen("node-name")) == 0U)
             node_name = tlv->value;
+        else if(strncmp(tlv->leaf_id, "rtr-id", strlen("rtr-id")) == 0U)
+            rtr_id = tlv->value;
         else
             assert(0);
     }TLV_LOOP_END;

@@ -17,7 +17,7 @@ static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, 
     byte *hello_tlv_buffer = (byte *)(hello_pkt_hdr + 1U);
     uint32_t hello_tlv_buffer_size = pkt_size - sizeof(isis_pkt_hdr_t);
 
-    rc = sprintf (buff, "ISIS_PTP_HELLO_PKT_TYPE : ");
+    rc = sprintf(buff, "ISIS_PTP_HELLO_PKT_TYPE : ");
 
     ITERATE_TLV_BEGIN(hello_tlv_buffer , tlv_type, tlv_len, tlv_value, hello_tlv_buffer_size){
 
@@ -200,13 +200,14 @@ void isis_print_pkt(void *arg, size_t arg_size)
 
     isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)(pkt_info->pkt);
     pkt_info->bytes_written = 0;
-    isis_pkt_type_t isis_pkt_type = isis_pkt_hdr->isis_pkt_type;
+    isis_pkt_type_t pkt_type = isis_pkt_hdr->isis_pkt_type;
 
-    switch(isis_pkt_type)
+    switch(pkt_type)
     {
         case ISIS_PTP_HELLO_PKT_TYPE:
         {
             pkt_info->bytes_written += isis_print_hello_pkt(buff, isis_pkt_hdr, pkt_size);
+            printf("%s reached\n",__FUNCTION__);
             break;
         }
         case ISIS_LSP_PKT_TYPE:
