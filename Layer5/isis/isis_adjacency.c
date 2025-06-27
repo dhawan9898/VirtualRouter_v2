@@ -1,8 +1,10 @@
 #include "../../tcp_public.h"
 #include "isis_adjacency.h"
 #include "isis_intf.h"
+#include "isis_rtr.h"
 #include "isis_const.h"
 #include "isis_lsdb.h"
+#include "isis_flood.h"
 
 static void isis_timer_expire_delete_adjacency_cb(void *arg, size_t arg_size)
 {
@@ -244,8 +246,125 @@ isis_adj_state_t isis_get_next_adj_state_on_receiving_next_hello(isis_adjacency_
 
 void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t new_adj_state)
 {
+    isis_adj_state_t old_adj_state = adjacency->adj_state;
+    node_t *node = adjacency->intf->att_node;
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
 
+    switch(old_adj_state){
+
+        case ISIS_ADJ_STATE_DOWN:
+        {
+           switch(new_adj_state){
+
+                case ISIS_ADJ_STATE_DOWN:
+                {
+                    break;
+                }
+                case ISIS_ADJ_STATE_INIT:
+                {
+                    adjacency->adj_state = new_adj_state;
+                    isis_adjacency_stop_delete_timer(adjacency);
+                    isis_adjacency_start_expiry_timer(adjacency);
+                    break;
+                }
+                case ISIS_ADJ_STATE_UP:
+                {
+                    break;
+                }
+                default:
+                    ;
+            } 
+        }
+
+        case ISIS_ADJ_STATE_INIT:
+        {
+            switch(new_adj_state){
+
+                case ISIS_ADJ_STATE_DOWN:
+                {
+                    adjacency->adj_state = new_adj_state;
+                    isis_adjacency_stop_delete_timer(adjacency);
+                    isis_adjacency_stop_expiry_timer(adjacency);
+                    break;
+                }
+                case ISIS_ADJ_STATE_INIT:
+                {
+                    break;
+                }
+                case ISIS_ADJ_STATE_UP:
+                {
+                    adjacency->adj_state = new_adj_state;
+                    isis_adjacency_refresh_expiry_timer(adjacency);
+                    isis_adjacency_set_uptime(adjacency);
+                    node_info->adj_up_count++;
+                    if(!isis_is_reconciliation_in_progress(adjacency->intf->att_node)){
+                        isis_enter_reconciliation_phase(adjacency->intf->att_node);
+                    }
+                    else
+                    {
+                        isis_restart_reconciliation_timer(adjacency->intf->att_node);
+                    }
+                    isis_schedule_lsp_pkt_generation(adjacency->intf->att_node);
+                    break;
+                }
+                default:
+                    ;
+            } 
+        }
+
+        case ISIS_ADJ_STATE_UP:
+        {
+            switch(new_adj_state){
+
+                case ISIS_ADJ_STATE_DOWN:
+                {
+                    adjacency->adj_state = new_adj_state;
+                    isis_adjacency_stop_expiry_timer(adjacency);
+                    isis_adjacency_start_delete_timer(adjacency);
+                    node_info->adj_up_count--;
+                    isis_schedule_lsp_pkt_generation(adjacency->intf->att_node);
+                    break;
+                }
+                case ISIS_ADJ_STATE_INIT:
+                {
+                    break;
+                }
+                case ISIS_ADJ_STATE_UP:
+                {
+                    isis_adjacency_refresh_expiry_timer(adjacency);
+                    break;
+                }
+                default:
+                    ;
+            } 
+        }
+
+        default:
+            ;
+    }
 }
 
+void isis_adjacency_set_uptime(isis_adjacency_t *adjacency)
+{
+    assert(adjacency->adj_state == ISIS_ADJ_STATE_UP);
+    adjacency->uptime = time(NULL);
+}
+
+void isis_delete_adjacency(isis_adjacency_t *adjacency)
+{
+    interface_t *intf = adjacency->intf;
+    isis_intf_info_t *intf_info = ISIS_INTF_INFO(intf);
+    assert(intf_info);
+    intf_info->adjacency = NULL;
+
+    isis_adjacency_stop_expiry_timer(adjacency);
+    isis_adjacency_stop_delete_timer(adjacency);
+    if(adjacency->adj_state == ISIS_ADJ_STATE_UP){
+        node_t *node = intf->att_node;
+        isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+        node_info->adj_up_count--;
+    }
+    free(adjacency);
+}
 
 

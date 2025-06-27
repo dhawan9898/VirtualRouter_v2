@@ -28,6 +28,7 @@ OBJS=glueThread/glthread.o	\
 		Layer5/isis/isis_intf.o	\
 		Layer5/isis/isis_pkt.o	\
 		Layer5/isis/isis_lsdb.o	\
+		Layer5/isis/isis_flood.o\
 		Layer5/isis/isis_adjacency.o
 
 VirtualRouter.exe:${OBJS} CommandParser/libcli.a
@@ -119,6 +120,9 @@ Layer5/isis/isis_adjacency.o:Layer5/isis/isis_adjacency.c
 
 Layer5/isis/isis_lsdb.o:Layer5/isis/isis_lsdb.c
 	${CC} ${CFLAGS} -c Layer5/isis/isis_lsdb.c -I . -I Layer5/ -o Layer5/isis/isis_lsdb.o
+
+Layer5/isis/isis_flood.o:Layer5/isis/isis_flood.c
+	${CC} ${CFLAGS} -c Layer5/isis/isis_flood.c -I . -I Layer5/ -o Layer5/isis/isis_flood.o
 
 CommandParser/libcli.a:
 	(cd CommandParser; make)
