@@ -17,7 +17,8 @@
 #define PROTO_ISIS      0x83
 
 #define MAX_NXT_HOPS        4
-
+#define INTF_MAX_METRIC     16777215 /*Choosen as per the standard = 2^24 -1*/
+#define INTF_METRIC_DEFAULT 1
 
 
 #define IP_HDR_INCLUDED         (1 << 0)

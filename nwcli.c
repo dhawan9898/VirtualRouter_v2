@@ -534,6 +534,14 @@ static int clear_topology_handler(param_t *param,
     }
 }
 
+static int validate_interface_metric_val(char *value){
+
+    uint32_t metric_val = atoi(value);
+    if(metric_val > 0 && metric_val <= INTF_MAX_METRIC)
+        return VALIDATION_SUCCESS;
+    return VALIDATION_FAILED;
+}
+
 extern int spf_algo_handler(param_t param, ser_buff_t *tlv_buf, op_mode enable_or_disable);
 extern void tcp_ip_traceoptions_cli(param_t *node_name_param, param_t *intf_name_param);
 extern int traceoptions_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enable_or_disable);  
@@ -817,6 +825,34 @@ void nw_init_cli(void)
                             init_param(&if_up_down_status, LEAF, 0, intf_config_handler, validate_if_up_down_status, STRING, "if-up-down", "<up | down>");
                             libcli_register_param(&if_name, &if_up_down_status);
                             set_param_cmd_code(&if_up_down_status, CMDCODE_CONF_INTF_UP_DOWN);
+                        }
+                        {
+                            static param_t metric;
+                            init_param(&metric, CMD, "metric", 0, 0, INVALID, 0, "Interface Metric");
+                            libcli_register_param(&if_name, &metric);
+                            {
+                                static param_t metric_val;
+                                init_param(&metric_val, LEAF, 0, intf_config_handler, validate_interface_metric_val, INT, "metric-val", "Metric Value(1-16777215)");
+                                libcli_register_param(&metric, &metric_val);
+                                set_param_cmd_code(&metric_val, CMDCODE_INTF_CONFIG_METRIC);
+                            }
+                        }
+                        {
+                            /* config node <node-name> ineterface <if-name> ip-address <ip-addr> <mask>*/
+                            static param_t ip_addr;
+                            init_param(&ip_addr, CMD, "ip-address", 0, 0, INVALID, 0, "Interface IP Address");
+                            libcli_register_param(&if_name, &ip_addr);
+                            {
+                                static param_t ip_addr_val;
+                                init_param(&ip_addr_val, LEAF, 0, 0, 0, IPV4, "intf-ip-address", "IPV4 address");
+                                libcli_register_param(&ip_addr, &ip_addr_val);
+                                {
+                                    static param_t mask;
+                                    init_param(&mask, LEAF, 0, intf_config_handler, validate_mask_value, INT, "mask", "mask [0-32]");
+                                    libcli_register_param(&ip_addr_val, &mask);
+                                    set_param_cmd_code(&mask, CMDCODE_INTF_CONFIG_IP_ADDR);
+                                }
+                            }
                         }
                         /* config node <node_name> interface <if-name> l2mode */
                         {
