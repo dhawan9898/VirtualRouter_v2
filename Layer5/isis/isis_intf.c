@@ -7,6 +7,7 @@
 #include "isis_pkt.h"
 #include "isis_const.h"
 #include "tcp_ip_trace.h"
+#include "isis_adjacency.h"
 
 extern char tlb[TCP_LOG_BUFFER_LEN];
 
@@ -101,11 +102,13 @@ void isis_disable_protocol_on_interface(interface_t *intf)
 {
     isis_intf_info_t *isis_intf_info = NULL;
     isis_intf_info = intf->intf_nw_prop.isis_intf_info;
-    if(isis_intf_info)
-        free(isis_intf_info);
-    intf->intf_nw_prop.isis_intf_info = NULL;
-    isis_stop_sending_hellos(intf);
+    if(!isis_intf_info)
+        return;
 
+    isis_stop_sending_hellos(intf);
+    isis_delete_adjacency(isis_intf_info->adjacency);
+    free(isis_intf_info);
+    intf->intf_nw_prop.isis_intf_info = NULL;
 }
 
 void isis_start_sending_hellos(interface_t *intf)

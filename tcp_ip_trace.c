@@ -581,6 +581,11 @@ void init_tcp_logging(void)
     memset(tlb, 0, sizeof(tlb));
 }
 
+void tcp_ip_refresh_tcp_log_file(void)
+{
+    tcp_log_file = freopen(NULL, "w", tcp_log_file);
+}
+
 void tcp_trace_internal(node_t *node, interface_t *interface, char *buff, const char *fn, int lineno) {
 
 	char lineno_str[16];

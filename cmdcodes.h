@@ -30,4 +30,6 @@
 #define CMDCODE_CONF_INTF_UP_DOWN        26 /*config node <node-name> interface <if-name> <up|down> */
 
 #define CMDCODE_INTF_CONFIG_METRIC       33 /*config node <node-name> interface <if-name> metric <metric-val>*/
+
+#define CMDCODE_CLEAR_LOG_FILE           27 /* clear log-file */
 #endif

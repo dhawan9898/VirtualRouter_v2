@@ -11,6 +11,7 @@ extern graph_t *topo;
 
 extern int isis_config_cli_tree(param_t *param);
 extern int isis_show_cli_tree(param_t *param);
+extern int isis_clear_cli_tree(param_t *param);
 /* The definitions below allow to hook up new commands (show/run)
    to the CLI. The Applications can write their own CLI trees and 
    hook up them here in this file, to integrate their commands to
@@ -19,22 +20,31 @@ extern int isis_show_cli_tree(param_t *param);
 typedef int(*cli_register_cb)(param_t *);
 
 static cli_register_cb cli_register_cb_arr_config_node_node_name_protocol_level[] =
-    {
-        isis_config_cli_tree,
-        0 /* Last member must be NULL */
-    };
+{
+    isis_config_cli_tree,
+    0 /* Last member must be NULL */
+};
 
 /* show node <node-name> protocol ... */
 static cli_register_cb cli_register_cb_arr_show_node_node_name_protcol_level[] =
-	{
-        isis_show_cli_tree,
-		
-        /* Add more CB here */
+{
+    isis_show_cli_tree,
 
-        0 /*  Last member must be NULL */
-	};
+    /* Add more CB here */
 
-static void cli_register_application_cli_trees(param_t *param, cli_register_cb *cli_register_cb_arr){
+    0 /*  Last member must be NULL */
+};
+
+/* clear node <node-name> protocol ....*/
+static cli_register_cb cli_register_cb_arr_clear_node_node_name_protocol_level[] =
+{
+    isis_clear_cli_tree,
+    0
+};
+
+static void
+cli_register_application_cli_trees(param_t * param, cli_register_cb *cli_register_cb_arr)
+{
 
     int i = 0;
     while (cli_register_cb_arr[i])
@@ -506,6 +516,24 @@ static int intf_config_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enab
     }
 }
 
+extern void tcp_ip_refresh_tcp_log_file();
+
+static int clear_topology_handler(param_t *param,
+                       ser_buff_t *tlv_buf,
+                       op_mode enable_or_disable){
+
+    int CMDCODE = -1;
+
+    CMDCODE = EXTRACT_CMD_CODE(tlv_buf);
+
+    switch(CMDCODE) {
+        case CMDCODE_CLEAR_LOG_FILE:
+            tcp_ip_refresh_tcp_log_file();
+            break;
+        default: ;
+    }
+}
+
 extern int spf_algo_handler(param_t param, ser_buff_t *tlv_buf, op_mode enable_or_disable);
 extern void tcp_ip_traceoptions_cli(param_t *node_name_param, param_t *intf_name_param);
 extern int traceoptions_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enable_or_disable);  
@@ -520,6 +548,38 @@ void nw_init_cli(void)
     param_t *run        = libcli_get_run_hook();
     param_t *debug_show = libcli_get_debug_show_hook();
     param_t *root       = libcli_get_root();
+    param_t *clear      = libcli_get_clear_hook();
+
+    /* Clear commands */
+    {
+        {
+            /* clear log */
+            static param_t log_file;
+            init_param(&log_file, CMD, "log-file", clear_topology_handler, 0, INVALID, 0, "clear log-file");
+            libcli_register_param(clear, &log_file);
+            set_param_cmd_code(&log_file, CMDCODE_CLEAR_LOG_FILE);
+        }
+        /* clear node ....*/
+        static param_t node;
+        init_param(&node, CMD, "node", 0, 0, INVALID, 0, "\"node\" keyword");
+        libcli_register_param(clear, &node);
+        libcli_register_display_callback(&node, display_graph_nodes);
+        {
+            /*clear node <node-name>*/ 
+            static param_t node_name;
+            init_param(&node_name, LEAF, 0, 0, validate_node_existence, STRING, "node-name", "Node Name");
+            libcli_register_param(&node, &node_name);	
+		    {
+			    /* clear node <node-name> protocol */
+				static param_t protocol;
+				init_param(&protocol, CMD, "protocol", 0, 0, INVALID, 0, "App protocol");
+				libcli_register_param(&node_name, &protocol);
+
+				/* show node <node-name> protocol ...*/
+				cli_register_application_cli_trees(&protocol, cli_register_cb_arr_clear_node_node_name_protocol_level);
+			}
+        }
+    }
 
     {
         /* show topology */
