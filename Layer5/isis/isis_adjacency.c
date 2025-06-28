@@ -196,18 +196,30 @@ void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tl
                 adjacency->hold_time = *(uint32_t *)(tlv_value);
                 break;
             case ISIS_TLV_METRIC_VAL:
-            if(adjacency->cost != *(uint32_t *)(tlv_value)){
-                adjacency->cost = *(uint32_t *)(tlv_value);
-                nbr_attr_changed = true;
-                regen_lsp = true;
-            }
+                if (adjacency->cost != *(uint32_t *)(tlv_value))
+                {
+                    adjacency->cost = *(uint32_t *)(tlv_value);
+                    nbr_attr_changed = true;
+                    regen_lsp = true;
+                }
                 break;
             case ISIS_TLV_IF_MAC:
-            if(memcmp(adjacency->nbr_mac.mac_addr, (byte *)tlv_value, tlv_len)){
-                memcpy(adjacency->nbr_mac.mac_addr, tlv_value, tlv_len);
-                force_bring_down_adj = true;
-            }
+                if (memcmp(adjacency->nbr_mac.mac_addr, (byte *)tlv_value, tlv_len))
+                {
+                    memcpy(adjacency->nbr_mac.mac_addr, tlv_value, tlv_len);
+                    force_bring_down_adj = true;
+                }
                 break;
+            #if ISIS_ENABLE_AUTH       
+            case ISIS_TLV_IF_AUTH:
+            {
+                if(ISIS_INTF_IS_AUTH_ENABLED(iif)){
+                    if(!memcmp(&adjacency->passcode, (byte *)tlv_value, tlv_len))
+                        assert(0);
+                }
+                break;
+            }
+            #endif
             default:
                 ;
         }

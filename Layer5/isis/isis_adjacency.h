@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "net.h"
+#include "isis_const.h"
 
 typedef enum isis_adj_state_ {
 
@@ -24,6 +25,10 @@ typedef struct isis_adjacency_{
     uint32_t nbr_intf_ip;   
     /* Mac Address */
     mac_add_t nbr_mac;
+#if ISIS_ENABLE_AUTH    
+    /* Passcode */
+    char passcode[32];
+#endif
     /* Nbr if index */
     uint32_t remote_if_index;  
     /* Hold time in sec reported by nbr*/

@@ -71,3 +71,9 @@ byte *tlv_buffer_get_particular_tlv(byte *tlv_buff, uint32_t tlv_buff_size, uint
     return NULL;
 }
 
+uint32_t get_new_ifindex(void){
+
+	static uint32_t ifindex = 100;
+	return (++ifindex);
+}
+

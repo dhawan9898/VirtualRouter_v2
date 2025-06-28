@@ -63,6 +63,8 @@ void isis_de_init(node_t *node)
 
 void isis_one_time_registration(void)
 {
+    /* register for notification to change in interface properties/configuration */
     nfc_intf_register_for_events(isis_interface_updates);
+    /* register for notification to isis trace pkts */
     nfc_register_for_pkt_tracing(ISIS_ETH_PKT_TYPE, isis_print_pkt);
 }

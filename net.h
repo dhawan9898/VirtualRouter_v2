@@ -8,6 +8,7 @@
 #include "tcp_ip_trace.h"
 #include "WheelTimer/WheelTimer.h"
 #include "tcpconst.h"
+#include "utils.h"
 
 
 #define TRUE  1U
@@ -88,10 +89,22 @@ typedef struct intf_nw_prop_{
     /* Interface Statistics */
     uint32_t pkt_recv;
     uint32_t pkt_sent;
+    uint32_t xmit_pkt_dropped;
 
     /* ISIS interface info */
     void *isis_intf_info;
 }intf_nw_prop_t;
+
+typedef union intf_prop_changed_{
+    uint32_t intf_metric;
+    struct{
+        uint32_t ip_addr;
+        uint8_t mask;
+    }ip_addr;
+    bool up_status;
+    intf_l2_mode_t intf_l2_mode;
+    uint32_t vlan;
+}intf_prop_changed_t;
 
 static inline void init_node_nw_prop(node_nw_prop_t *node_nw_prop);
 static inline void init_intf_nw_prop(intf_nw_prop_t *intf_nw_prop);
@@ -118,6 +131,7 @@ static inline void init_intf_nw_prop(intf_nw_prop_t *intf_nw_prop)
 {
     /* L1 propoerties */
     intf_nw_prop->is_up = TRUE;
+    intf_nw_prop->ifindex = get_new_ifindex();
 
     /* L2 Propoerties */
     memset(&intf_nw_prop->mac_addr.mac_addr, 0, 6);
@@ -133,12 +147,13 @@ static inline void init_intf_nw_prop(intf_nw_prop_t *intf_nw_prop)
     /* Interface statistics */
     intf_nw_prop->pkt_recv = 0U;
     intf_nw_prop->pkt_sent = 0U;
+    intf_nw_prop->xmit_pkt_dropped = 0U;
 }
 
 
 #define IF_MAC(intf_ptr) ((intf_ptr)->intf_nw_prop.mac_addr.mac_addr)
 #define IF_IP(intf_ptr)  ((intf_ptr)->intf_nw_prop.ip_addr.ip_addr)
-#define IF_IP_EXIST(intf_ptr) ((intf_ptr)->intf_nw_prop.is_ipadd_config)
+#define IF_IP_EXIST(intf_ptr) ((intf_ptr)->intf_nw_prop.is_ipaddr_config)
 #define IF_MASK(intf_ptr) ((intf_ptr)->intf_nw_prop.mask)
 #define IF_IS_UP(intf_ptr) ((intf_ptr)->intf_nw_prop.is_up == TRUE)
 #define IF_INDEX(intf_ptr) ((intf_ptr)->intf_nw_prop.ifindex)

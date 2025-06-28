@@ -28,10 +28,13 @@ Routing table: show node R1 rt
 Known Issues:
 
 08-06-2025: Ping using IP-in-IP (i.e. ero a specific node interface) crashes due to segmentation fault - Bugfix planned
-08-06-2025: Routing table using SPF is generated for only immediate neighbours (ECMP paths excluded) - Bugfix planned
-08-06-2025: Ping utility to be re-tested with Dynamic routing table generation using SPF algorithm. - Planned
+08-06-2025: Routing table using SPF is generated for only immediate neighbours (ECMP paths excluded) - Bugfix planned (solved)
+08-06-2025: Ping utility to be re-tested with Dynamic routing table generation using SPF algorithm. - Planned (solved)
+21-07-2025: crash during enabling trace - Bugfix planned (solved)
+26-07-2025: crash while printing/tracing isis hello packets - Bugfix planned
 
 Solved Issues:
 
 11-06-2025: Routing table issue for ECMP and default route fixed
 11-06-2025: Ping utility (without ERO) re-tested with routing table fixes. (Ping ERO issue still exist)
+24-07-2025: Trace could be enabled without crash

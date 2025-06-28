@@ -186,7 +186,10 @@ byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size)
     temp = tlv_buffer_insert_tlv(temp, ISIS_TLV_HOLD_TIME, sizeof(uint32_t), (byte *)&hold_time);
     temp = tlv_buffer_insert_tlv(temp, ISIS_TLV_METRIC_VAL, sizeof(uint32_t), (byte *)&cost);
     temp = tlv_buffer_insert_tlv(temp, ISIS_TLV_IF_MAC, sizeof(mac_add_t), IF_MAC(intf));
-
+#if ISIS_ENABLE_AUTH      
+    if(ISIS_INTF_IS_AUTH_ENABLED(intf))
+        temp = tlv_buffer_insert_tlv(temp, ISIS_TLV_IF_AUTH , 32, (byte *)&ISIS_INTF_AUTH_PASSCODE(intf));
+#endif
     SET_COMMON_ETH_FCS(hello_eth_hdr, eth_pkt_paylod_size, 0);
     return (byte *)hello_eth_hdr;
 }

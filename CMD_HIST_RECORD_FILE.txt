@@ -494,3 +494,6 @@ int eth2
 cd
 config node R2 proto isis /
 int eth3
+config node R1 prot isis /
+conf node R1 proto isis /
+conf node R1 proto isis /

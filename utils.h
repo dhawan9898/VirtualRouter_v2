@@ -49,4 +49,6 @@ byte *tlv_buffer_insert_tlv(byte *buff, uint8_t tlv_no, uint8_t data_len, byte *
 
 byte *tlv_buffer_get_particular_tlv(byte *tlv_buff, uint32_t tlv_buff_size, uint8_t tlv_no, uint8_t *tlv_data_len);
 
+uint32_t get_new_ifindex(void);
+
 #endif  //UTILS_H

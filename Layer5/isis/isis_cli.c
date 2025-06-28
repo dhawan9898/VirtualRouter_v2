@@ -4,6 +4,7 @@
 #include "isis_rtr.h"
 #include "isis_intf.h"
 #include "isis_adjacency.h"
+#include "isis_const.h"
 
 static int isis_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enable_or_disable)
 {
@@ -84,9 +85,7 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
     return 0;
 }
 
-static int isis_intf_config_handler(param_t *param,
-                                 ser_buff_t *tlv_buff,
-                                 op_mode enable_or_disable) {
+static int isis_intf_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enable_or_disable) {
 
      int cmdcode = - 1;
      tlv_struct_t *tlv = NULL;
@@ -94,6 +93,8 @@ static int isis_intf_config_handler(param_t *param,
      node_t *node;
      char *if_name = NULL;
      interface_t *interface = NULL;
+     uint32_t hello_interval;
+     uint32_t passcode;
 
      cmdcode = EXTRACT_CMD_CODE(tlv_buff);
 
@@ -105,6 +106,14 @@ static int isis_intf_config_handler(param_t *param,
             else if (strncmp(tlv->leaf_id, "if-name", strlen("if-name")) == 0) {
                 if_name =  tlv->value;
             }
+            #if ISIS_ENABLE_AUTH   
+            else if (strncmp(tlv->leaf_id, "hello-interval-value", strlen("hello-interval-value")) == 0){
+                hello_interval = tlv->value;
+            }  
+            else if (strncmp(tlv->leaf_id, "passcode", strlen("passcode")) == 0){
+                memcpy(&ISIS_INTF_AUTH_PASSCODE(interface), tlv->value, 32);
+            }
+            #endif
             else {
                 assert(0);
             }
@@ -136,6 +145,25 @@ static int isis_intf_config_handler(param_t *param,
 
                    } ITERATE_NODE_INTERFACES_END(node, interface)
                    break;
+                /* cofig node <node-name> protocol isis interface <if-name> hello-interval <hello-interval-value> */
+                case CMDCODE_CONF_NODE_ISIS_PROTO_INTF_HELLO_INTERVAL:
+                {
+                    if((hello_interval > 100) && (hello_interval < 3)){
+                        assert(0);
+                    }
+                    interface = get_node_intf_by_name(node, if_name);
+                    ISIS_INTF_HELLO_INTERVAL(interface) = hello_interval;
+                    break;
+                }
+                /* cofig node <node-name> protocol isis interface <if-name> authentication <passcode> */
+                case CMDCODE_CONF_NODE_ISIS_PROTO_INTF_AUTH:
+                {
+                    interface = get_node_intf_by_name(node, if_name);
+                    #if ISIS_ENABLE_AUTH   
+                    ISIS_INTF_IS_AUTH_ENABLED(interface) = true;
+                    #endif
+                    break;
+                }
                 default: ;
             }
             break;
@@ -235,6 +263,36 @@ int isis_config_cli_tree(param_t *param){
                 init_param(&if_name, LEAF, 0, isis_intf_config_handler, 0, STRING, "if-name", "interface name");
                 libcli_register_param(&interface, &if_name);
                 set_param_cmd_code(&if_name, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_ENABLE);
+
+                {
+                    /* config node <node-name> protocol isis interface <if-name> hello-interval */
+                    static param_t hello_interval;
+                    init_param(&hello_interval, CMD, "hello-interval", isis_intf_config_handler, 0, INVALID, 0, "hello interval config");
+                    libcli_register_param(&interface, &hello_interval);
+                    set_param_cmd_code(&hello_interval, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_HELLO_INTERVAL);
+                    {
+                        /* config node <node-name> protocol isis interface <if-name> hello-interval <hello-interval-value> */
+                        static param_t hello_interval_value;
+                        init_param(&hello_interval_value, LEAF, 0, isis_intf_config_handler, 0, STRING, "hello-interval-value", "hello interval value");
+                        libcli_register_param(&interface, &hello_interval_value);
+                        set_param_cmd_code(&hello_interval_value, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_HELLO_INTERVAL_VALUE);
+                    }
+                }
+
+                {
+                    /* config node <node-name> protocol isis interface <if-name> hello-interval <hello-interval-value> */
+                    static param_t authentication;
+                    init_param(&authentication, CMD, "authentication", isis_intf_config_handler, 0, INVALID, 0, "authentication");
+                    libcli_register_param(&interface, &authentication);
+                    set_param_cmd_code(&authentication, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_AUTH);
+                    {
+                        /* config node <node-name> protocol isis interface <if-name> hello-interval <hello-interval-value> */
+                        static param_t passcode;
+                        init_param(&passcode, LEAF, 0, isis_intf_config_handler, 0, STRING, "passcode", "passcode");
+                        libcli_register_param(&interface, &passcode);
+                        set_param_cmd_code(&passcode, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_AUTH_PASSCODE);
+                    }
+                }
             }
         }
     }
