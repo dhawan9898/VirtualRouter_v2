@@ -10,6 +10,8 @@ typedef struct isis_timer_data_ {
 } isis_timer_data_t;
 
 typedef struct isis_node_info_{
+    /*Layer 2 Mapping */
+    bool layer2_mapping;
     uint16_t adj_up_count;
 }isis_node_info_t;
 

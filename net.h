@@ -30,6 +30,8 @@ typedef struct interface_ interface_t;
 typedef struct arp_table_ arp_table_t;
 typedef struct mac_table_ mac_table_t;
 typedef struct rt_table_ rt_table_t;
+typedef struct isis_node_info_ isis_node_info_t;
+typedef struct isis_intf_info_ isis_intf_info_t;
 
 typedef enum {
     ACCESS,
@@ -67,7 +69,7 @@ typedef struct node_nw_prop_{
     char *send_log_buffer; /* used for logging */
 
     /* ISIS protocol info */
-    void *isis_node_info;
+    isis_node_info_t *isis_node_info;
 }node_nw_prop_t;
 
 typedef struct intf_nw_prop_{
@@ -92,7 +94,7 @@ typedef struct intf_nw_prop_{
     uint32_t xmit_pkt_dropped;
 
     /* ISIS interface info */
-    void *isis_intf_info;
+    isis_intf_info_t *isis_intf_info;
 }intf_nw_prop_t;
 
 typedef union intf_prop_changed_{

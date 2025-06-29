@@ -43,6 +43,7 @@ void isis_init(node_t *node)
         return;
     node_info = calloc(1, sizeof(isis_node_info_t));
     node->node_nw_prop.isis_node_info = node_info;
+    node->node_nw_prop.isis_node_info->layer2_mapping = false;
     printf("%s: ISIS Protocol initialized at node level\n", __FUNCTION__);
     //node_info->seq_no = 0;
 

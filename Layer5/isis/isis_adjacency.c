@@ -5,6 +5,7 @@
 #include "isis_const.h"
 #include "isis_lsdb.h"
 #include "isis_flood.h"
+#include "isis_l2map.h"
 
 static void isis_timer_expire_delete_adjacency_cb(void *arg, size_t arg_size)
 {
@@ -240,6 +241,10 @@ void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tl
         isis_schedule_lsp_pkt_generation(adjacency->intf->att_node);
     }
     ISIS_INTF_INCREMENT_STATS(iif, good_hello_pkt_recvd);
+
+    if((ISIS_NODE_INFO(iif->att_node)->layer2_mapping == true) && (adjacency->adj_state == ISIS_ADJ_STATE_UP)){
+        isis_update_layer2_mapping_on_adjacency_up(adjacency);
+    }
 }
 
 isis_adj_state_t isis_get_next_adj_state_on_receiving_next_hello(isis_adjacency_t *adjacency)

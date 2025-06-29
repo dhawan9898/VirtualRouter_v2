@@ -263,7 +263,7 @@ int isis_config_cli_tree(param_t *param){
                 init_param(&if_name, LEAF, 0, isis_intf_config_handler, 0, STRING, "if-name", "interface name");
                 libcli_register_param(&interface, &if_name);
                 set_param_cmd_code(&if_name, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_ENABLE);
-
+                #if ISIS_ENABLE_AUTH  
                 {
                     /* config node <node-name> protocol isis interface <if-name> hello-interval */
                     static param_t hello_interval;
@@ -293,6 +293,7 @@ int isis_config_cli_tree(param_t *param){
                         set_param_cmd_code(&passcode, CMDCODE_CONF_NODE_ISIS_PROTO_INTF_AUTH_PASSCODE);
                     }
                 }
+                #endif
             }
         }
     }

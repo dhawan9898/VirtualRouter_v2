@@ -80,6 +80,7 @@ typedef struct arp_entry_{
     /* List of packets which are pending for ARP resolution */
     glthread_t arp_pending_list;
     wheel_timer_elem_t *exp_timer_wt_elem;
+    uint16_t proto;
 }arp_entry_t;
 
 GLTHREAD_TO_STRUCT(arp_glue_to_arp_entry, arp_entry_t, arp_glue);
