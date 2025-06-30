@@ -1,4 +1,5 @@
 #include "../../tcp_public.h"
+#include "../../WheelTimer/WheelTimer.h"
 #include "isis_adjacency.h"
 #include "isis_intf.h"
 #include "isis_rtr.h"
@@ -73,7 +74,8 @@ static void isis_adjacency_stop_expiry_timer(isis_adjacency_t *adjacency)
 static void isis_adjacency_refresh_expiry_timer(isis_adjacency_t *adjacency)
 {
     assert(adjacency->expiry_timer);
-    reschedule_timer(adjacency->expiry_timer, adjacency->hold_time, 0); //To revisit
+    //reschedule_timer(adjacency->expiry_timer, adjacency->hold_time, 0); //To revisit
+    timer_reschedule(adjacency->expiry_timer, adjacency->hold_time);
 }
 
 void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces) {
@@ -179,7 +181,7 @@ void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tl
                 }
                 break;
             case ISIS_TLV_IF_IP:
-                memcpy((byte *)&ip_addr_int, tlv_value, ip_addr_int);
+                memcpy((byte *)&ip_addr_int, tlv_value, sizeof(ip_addr_int));
                 if(adjacency->nbr_intf_ip != ip_addr_int){
                     nbr_attr_changed = true;
                     adjacency->nbr_intf_ip = ip_addr_int;

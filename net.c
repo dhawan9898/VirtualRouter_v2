@@ -374,7 +374,7 @@ bool_t is_same_subnet(char *ip_addr, char mask, char *other_ip_addr){
 
     apply_mask(ip_addr, mask, intf_subnet);
     apply_mask(other_ip_addr, mask, subnet2);
-
+    printf("%s: comparing %s with %s\n", __FUNCTION__, intf_subnet, subnet2);
     if(strncmp(intf_subnet, subnet2, 16) == 0){
         return TRUE;
     }

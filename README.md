@@ -31,10 +31,12 @@ Known Issues:
 08-06-2025: Routing table using SPF is generated for only immediate neighbours (ECMP paths excluded) - Bugfix planned (solved)
 08-06-2025: Ping utility to be re-tested with Dynamic routing table generation using SPF algorithm. - Planned (solved)
 21-07-2025: crash during enabling trace - Bugfix planned (solved)
-26-07-2025: crash while printing/tracing isis hello packets - Bugfix planned
+26-07-2025: crash while printing/tracing isis hello packets in isis_print_pkt() - Bugfix planned
+30-07-2025: crash seen while attempting to refresh the expiry timer of adjacencies using resurrect_timer() API - Bugfix planned (solved)
 
 Solved Issues:
 
 11-06-2025: Routing table issue for ECMP and default route fixed
 11-06-2025: Ping utility (without ERO) re-tested with routing table fixes. (Ping ERO issue still exist)
 24-07-2025: Trace could be enabled without crash
+30-07-2025: Crash seen while attempting to refresh teh expiry timer is now solved

@@ -111,25 +111,24 @@ setup_timer(
 	return timer;
 }
 
-void
-resurrect_timer(Timer_t *timer){
+void resurrect_timer(Timer_t *timer){
 
-	int rc;
+	int rc = 0;
 	rc = timer_settime(timer->posix_timer, 0, &timer->ts, NULL);
+	if(rc < 0)
+		printf("Error: %s\n", strerror(errno));
 	assert(rc >= 0);
 }
 
-void
-start_timer(Timer_t *timer){
+void start_timer(Timer_t *timer){
 
 	resurrect_timer(timer);
 	timer_set_state(timer, TIMER_RUNNING);
 }
 
-void
-delete_timer(Timer_t *timer){
+void delete_timer(Timer_t *timer){
 
-	int rc;
+	int rc = 0;
 	rc = timer_delete(timer->posix_timer);
 	assert(rc >= 0);
 	timer->user_arg = NULL; /* User arg need to be freed by Appln */

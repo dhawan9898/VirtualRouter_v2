@@ -67,6 +67,8 @@ bool isis_pkt_trap_rule(char *pkt, size_t pkt_size){
 
 static void isis_process_hello_pkt(node_t *node, interface_t *iif, ethernet_frame_t *hello_eth_hdr, size_t pkt_size)
 {
+    char if_ip_addr_str[16];
+
     /* Pkt robustness check */
     /* 1. Reject the pkt if isis is not enabled in the interface */
     if(!isis_node_intf_is_enable(iif)){
@@ -100,9 +102,11 @@ static void isis_process_hello_pkt(node_t *node, interface_t *iif, ethernet_fram
         goto bad_hello;
     }
 
-    /* 5. Reject the pkt if neighbour node's interface Ip doesn't fall on the same subnet */
-    char *if_ip_addr_str = tcp_ip_convert_ip_n_to_p(*if_ip_addr_int, 0);
-    if(!is_same_subnet(IF_IP(iif), IF_MASK(iif) ,if_ip_addr_str)){
+    /* 5. Reject the pkt if neighbour node's interface IP doesn't fall on the same subnet */
+    char *ip_str = tcp_ip_convert_ip_n_to_p(*if_ip_addr_int, 0);
+    strncpy(if_ip_addr_str, ip_str, 16U); /* observed stack corruption without this */
+    printf("%s: Hello Pkt received on intf with IP %s/%d from interface with IP %s\n", __FUNCTION__, IF_IP(iif), IF_MASK(iif), if_ip_addr_str);
+    if(!is_same_subnet(IF_IP(iif), IF_MASK(iif), if_ip_addr_str)){
         printf("%s: Error - Hello Pkt from different subnet\n", __FUNCTION__);
         assert(0);
         goto bad_hello;
@@ -201,21 +205,21 @@ void isis_print_pkt(void *arg, size_t arg_size)
     byte *buff = pkt_info->pkt_print_buffer;
     size_t pkt_size = pkt_info->pkt_size;
 
-    isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)(pkt_info->pkt);
+    isis_pkt_hdr_t *pkt_hdr = (isis_pkt_hdr_t *)(pkt_info->pkt);
     pkt_info->bytes_written = 0;
-    isis_pkt_type_t pkt_type = isis_pkt_hdr->isis_pkt_type;
+    isis_pkt_type_t pkt_type = pkt_hdr->isis_pkt_type;
 
     switch(pkt_type)
     {
         case ISIS_PTP_HELLO_PKT_TYPE:
         {
-            pkt_info->bytes_written += isis_print_hello_pkt(buff, isis_pkt_hdr, pkt_size);
+            pkt_info->bytes_written += isis_print_hello_pkt(buff, pkt_hdr, pkt_size);
             printf("%s reached\n",__FUNCTION__);
             break;
         }
         case ISIS_LSP_PKT_TYPE:
         {
-            pkt_info->bytes_written += isis_print_lsp_pkt(buff, isis_pkt_hdr, pkt_size);
+            pkt_info->bytes_written += isis_print_lsp_pkt(buff, pkt_hdr, pkt_size);
         }
         default:
             ;

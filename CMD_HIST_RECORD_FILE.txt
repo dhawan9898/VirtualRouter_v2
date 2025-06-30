@@ -503,3 +503,78 @@ interface eth2
 cd 
 config node R2 proto isis /
 int eth3
+config node R1 proto isis /
+int eth2
+cd
+config node R2 proto isis /
+int eth3
+config node R1 proto isis /
+int eth2
+cd
+config node R2 proto isis /
+int eth3
+config node R1 proto isis /
+int eth2
+cd
+config node R3 proto isis /
+int eth3
+int eth3
+cd 
+config node R2 proto isis /
+int eth3
+conf node R2 proto isis /
+int eth3
+cd
+conf node R1 proto isis /
+int eth2
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+conf node R1 proto isis /
+int eth2
+cd
+con
+node R2 proto isis /
+int eth3
+config node R1 proto isis /
+int eth2
+cd
+config  node R2 proto isis /
+int eth3
+config node R1 traceoptions flag all
+config node R1 proto isis /
+int eth2
+conf node R1 traceoptions flag all
+conf node R1 proto isis /
+int eth2
+conf node R1 traceoptions flag all
+conf node R1 proto isis /
+int eth2
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd

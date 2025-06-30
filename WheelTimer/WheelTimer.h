@@ -60,6 +60,7 @@ struct _wheel_timer_t {
     slotlist_t reschd_list;
     unsigned int no_of_wt_elem;
     timer_resolution_t timer_resolution;
+    bool debug;
     slotlist_t slotlist[0];
 };
 

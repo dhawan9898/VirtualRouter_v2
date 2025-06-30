@@ -242,6 +242,46 @@ void de_register_app_event(wheel_timer_elem_t *wt_elem){
     _wt_elem_reschedule(wt_elem->wt, wt_elem, 0, WTELEM_DELETE);
 }
 
+static void _timer_reschedule(wheel_timer_t *wt, 
+                    wheel_timer_elem_t *wt_elem, 
+                    int new_time_interval, 
+                    wt_opcode_t opcode){
+
+	if (wt->debug) { printf("%s() called wt_elem %p , opcode = %d\n", __FUNCTION__, wt_elem, opcode); }
+    switch(opcode){
+        case WTELEM_CREATE:
+        case WTELEM_RESCHED:
+        case WTELEM_DELETE:
+               wt_elem->opcode = opcode;
+               wt_elem->new_time_interval = new_time_interval;
+			
+               WT_LOCK_SLOT_LIST(WT_GET_RESCHD_SLOTLIST(wt));
+			   wt_elem->slotlist_head = NULL;
+               remove_glthread(&wt_elem->reschedule_glue);
+               glthread_add_next(WT_GET_RESCHD_SLOTLIST_HEAD(wt), 
+               		&wt_elem->reschedule_glue);
+			   if (wt->debug) { printf("%s() wt_elem %p Added to Reschedule Q\n", __FUNCTION__, wt_elem); }
+               WT_UNLOCK_SLOT_LIST(WT_GET_RESCHD_SLOTLIST(wt));
+ 			
+            break;
+        default:
+            assert(0);
+    }
+}
+
+void timer_reschedule(wheel_timer_elem_t *wt_elem, int new_time_interval){
+  
+	wheel_timer_t *wt = wt_elem->wt;
+	
+	if (!new_time_interval){
+         //|| (new_time_interval % wt_get_clock_interval_in_millisec(wt) != 0)){
+
+		assert(0);
+	}   
+
+    _timer_reschedule(wt, wt_elem, new_time_interval, WTELEM_RESCHED);    
+}
+
 void wt_elem_reschedule(wheel_timer_elem_t *wt_elem, int new_time_interval){
    
     _wt_elem_reschedule(wt_elem->wt, wt_elem, new_time_interval, WTELEM_RESCHED);    

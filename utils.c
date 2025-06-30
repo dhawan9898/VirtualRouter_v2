@@ -28,7 +28,7 @@ void apply_mask(char *prefix, char mask, char *str_prefix){
         return;
     }
 
-    /* convert given Ip address in to binary format */
+    /* convert given IP address into binary format */
     inet_pton(AF_INET, prefix, &binary_prefix);
     binary_prefix = htonl(binary_prefix);
 
