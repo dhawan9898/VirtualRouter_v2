@@ -44,7 +44,7 @@ void nfc_register_for_pkt_tracing(uint32_t protocol_no, nfc_app_cb app_cb)
     memset(&nfce_template, 0, sizeof(notif_chain_elem_t));
     memcpy(&nfce_template.key, (char *)&protocol_no, sizeof(protocol_no));
     nfce_template.key_size = sizeof(protocol_no);
-    nfce_template.is_key_set = TRUE;
+    nfce_template.is_key_set = true;
     nfce_template.app_cb = app_cb;
 
     init_glthread(&nfce_template.glue);

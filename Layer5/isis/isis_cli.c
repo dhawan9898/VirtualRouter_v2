@@ -164,6 +164,12 @@ static int isis_intf_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mod
                     #endif
                     break;
                 }
+                /* cofig node <node-name> protocol isis layer2-map */
+                case CMDCODE_CONF_NODE_ISIS_PROTO_L2_MAP:
+                {
+                    isis_enable_layer2_mapping(node);
+                    break;
+                }
                 default: ;
             }
             break;
@@ -246,6 +252,17 @@ int isis_config_cli_tree(param_t *param){
         libcli_register_param(param, &isis_proto);
         set_param_cmd_code(&isis_proto, ISIS_CONFIG_NODE_ENABLE);
         {
+            {
+                /* config node <node-name> protocol isis layer2-map */
+                static param_t l2map;
+                init_param(&l2map, CMD, "layer2-map", isis_intf_config_handler, 0, INVALID, 0, "Layer 2 Mapping");
+                libcli_register_param(&isis_proto, &l2map);
+                set_param_cmd_code(&l2map, CMDCODE_CONF_NODE_ISIS_PROTO_L2_MAP);
+                {
+                    support_cmd_negation(&l2map);
+                }
+            }
+
             /* config node <node-name> protocol isis interface ...*/
             static param_t interface;
             init_param(&interface, CMD, "interface", 0, 0, INVALID, 0, "interface");
