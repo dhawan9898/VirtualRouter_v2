@@ -52,6 +52,11 @@ isis_adj_state_t isis_get_next_adj_state_on_receiving_next_hello(isis_adjacency_
 void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t new_adj_state);
 void isis_adjacency_set_uptime(isis_adjacency_t *adjacency);
 void isis_delete_adjacency(isis_adjacency_t *adjacency);
+/* TLV22 handling functions for LSP pkts */
+uint8_t isis_nbr_tlv_encode_size(isis_adjacency_t *adjacency, uint8_t *total_subtlv_len);
+byte *isis_encode_nbr_tlv(isis_adjacency_t *adjacency, byte *buff, uint16_t *tlv_len);
+uint16_t isis_size_to_encode_all_nbr_tlv(node_t * node);
+byte *isis_encode_all_nbr_tlvs(node_t *node, byte *buff);
 
 static inline char *isis_adj_state_str(isis_adj_state_t adj_state) {
 
