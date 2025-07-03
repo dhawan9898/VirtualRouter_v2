@@ -1,0 +1,2 @@
+isis_enable_protocol_on_interface (93) :R1:eth2:ISIS(CONFIG): Protocol is enabled on interface
+isis_enable_protocol_on_interface (93) :R2:eth3:ISIS(CONFIG): Protocol is enabled on interface

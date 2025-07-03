@@ -13,6 +13,13 @@ typedef struct isis_pkt_hdr_{
 }isis_pkt_hdr_t;
 #pragma pack(pop)
 
+typedef struct isis_lsp_pkt_{
+    /* pointer to lsp pkt buffer with the eth header */
+    byte *pkt;
+    /* size of lsp pkt including  ethenet encapsulation */
+    size_t pkt_size;
+}isis_lsp_pkt_t;
+
 bool isis_pkt_trap_rule(char *pkt, size_t pkt_size);
 
 void isis_pkt_receive(void *arg, size_t arg_size);
@@ -20,5 +27,11 @@ void isis_pkt_receive(void *arg, size_t arg_size);
 byte *isis_prepare_hello_pkt(interface_t *intf, size_t *hello_pkt_size);
 
 void isis_print_pkt(void *arg, size_t arg_size);
+
+void isis_create_fresh_lsp_pkt(node_t *node);
+
+uint32_t *isis_get_lsp_pkt_rtr_id(isis_lsp_pkt_t *lsp_pkt);
+
+uint32_t *isis_get_lsp_pkt_seq_no(isis_lsp_pkt_t *lsp_pkt);
 
 #endif

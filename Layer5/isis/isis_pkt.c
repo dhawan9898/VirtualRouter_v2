@@ -6,6 +6,7 @@
 #include "isis_adjacency.h"
 #include "layer5.h"
 
+
 static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, uint32_t pkt_size)
 {
     uint32_t rc = 0;
@@ -224,4 +225,70 @@ void isis_print_pkt(void *arg, size_t arg_size)
         default:
             ;
     }
+}
+
+void isis_create_fresh_lsp_pkt(node_t *node)
+{
+    /* Steps:
+     *  1. Calculate the total size of the new LSP Packet
+     *  2. Allocate buffer (using malloc) for the new LSP packet
+     *  3. Populate the contents of the new LSP pkt
+     *  4. Discard the old LPS pkt
+     *  5. Cache the new LSP pkt
+     */
+    /* Step #1 */
+    size_t lsp_size_estimate;
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+    if(!node)
+        return;
+        
+    lsp_size_estimate += ETH_HDR_SIZE_EXCL_PAYLOAD;                 /* ETH header size */
+    lsp_size_estimate += sizeof(isis_pkt_hdr_t);                    /* ISIS Pkt header size */
+    lsp_size_estimate += TLV_OVERHEAD_SIZE + NODE_NAME_SIZE;        /* size of Hostname TLV Type, TLV len and Hostname */
+    lsp_size_estimate += isis_size_to_encode_all_nbr_tlv(node);     /* size for all TLVs (TLV22) and sub TLVs */
+
+    if(lsp_size_estimate > MAX_PACKET_BUFFER_SIZE)
+        return;
+
+    /* Step #2 */
+    /* Create memory for whole MAX_PACKET buffer size and then shift right so that new headers can be inserted (if required)*/
+    ethernet_frame_t *eth_pkt = tcp_ip_get_new_pkt_buffer(lsp_size_estimate);
+    memset(eth_pkt->src_mac.mac_addr, 0, sizeof(mac_add_t));        /* sourec MAC should be empty */
+    layer2_fill_with_broadcast_mac(eth_pkt->dst_mac.mac_addr);      /* destination MAC should be broadcast */
+    eth_pkt->type = ISIS_ETH_PKT_TYPE;
+
+    /* Step #3 */
+    isis_pkt_hdr_t *isis_pkt = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_pkt);
+    isis_pkt->isis_pkt_type = ISIS_LSP_PKT_TYPE;
+    isis_pkt->seq_no++;
+    isis_pkt->rtr_id = tcp_ip_convert_ip_n_to_p(NODE_LO_ADDRESS(node), NULL);
+
+    byte *lsp_tlv_buffer = (byte *)(isis_pkt + 1U);
+    lsp_tlv_buffer = tlv_buffer_insert_tlv(lsp_tlv_buffer, ISIS_TLV_HOSTNAME, NODE_NAME_SIZE, node->node_name);
+    lsp_tlv_buffer = isis_encode_all_nbr_tlvs(node, lsp_tlv_buffer);
+
+    if(node_info->self_lsp_pkt){
+        tcp_ip_free_pkt_buffer(node_info->self_lsp_pkt->pkt, lsp_size_estimate);
+        free(node_info->self_lsp_pkt);
+        node_info->self_lsp_pkt = NULL;
+    }
+
+    /* Step #4 */
+    node_info->self_lsp_pkt = calloc(1, sizeof(isis_lsp_pkt_t));
+    node_info->self_lsp_pkt->pkt = (byte *)eth_pkt;
+    node_info->self_lsp_pkt->pkt_size = lsp_size_estimate;
+}
+
+uint32_t *isis_get_lsp_pkt_rtr_id(isis_lsp_pkt_t *lsp_pkt)
+{
+    ethernet_frame_t *eth_pkt = (ethernet_frame_t *)lsp_pkt->pkt;
+    isis_pkt_hdr_t *isis_pkt = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_pkt);
+    return (uint32_t *)&isis_pkt->rtr_id;
+}
+
+uint32_t *isis_get_lsp_pkt_seq_no(isis_lsp_pkt_t *lsp_pkt)
+{
+    ethernet_frame_t *eth_pkt = (ethernet_frame_t *)lsp_pkt->pkt;
+    isis_pkt_hdr_t *isis_pkt = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_pkt);
+    return (uint32_t *)&isis_pkt->seq_no;
 }

@@ -615,3 +615,20 @@ cd
 show node R1 arp
 show node R2 arp
 run node R1 ping 122.1.1.3 ero 122.1.1.0
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
+show node R1 proto isis
+show node R1 proto isis lsdb
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
+show node R1 proto isis
+show node R2 proto isis
+show node R1 proto isis lsdb

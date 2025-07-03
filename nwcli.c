@@ -155,7 +155,7 @@ static int arp_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enable_or_di
 }
 
 /* Display Node Interfaces - list of interfaces in a node */
-static void display_node_interfaces(param_t *param, ser_buff_t *tlv_buf){
+void display_node_interfaces(param_t *param, ser_buff_t *tlv_buf){
 
     node_t *node;
     char *node_name;

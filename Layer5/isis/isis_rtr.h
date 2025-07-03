@@ -1,6 +1,8 @@
 #ifndef __ISIS_RTR_H__
 #define __ISIS_RTR_H__
 
+typedef struct isis_lsp_pkt_ isis_lsp_pkt_t; 
+
 typedef struct isis_timer_data_ {
 
     node_t *node;
@@ -10,9 +12,11 @@ typedef struct isis_timer_data_ {
 } isis_timer_data_t;
 
 typedef struct isis_node_info_{
+    uint16_t adj_up_count;
+    uint32_t seq_no;
+    isis_lsp_pkt_t *self_lsp_pkt;
     /*Layer 2 Mapping */
     bool layer2_mapping;
-    uint16_t adj_up_count;
 }isis_node_info_t;
 
 #define ISIS_NODE_INFO(node_ptr) (isis_node_info_t *)((node_ptr)->node_nw_prop.isis_node_info)

@@ -5,6 +5,9 @@
 #include "isis_intf.h"
 #include "isis_adjacency.h"
 #include "isis_const.h"
+#include "isis_pkt.h"
+
+extern display_node_interfaces(param_t *param, ser_buff_t *tlv_buf);
 
 static int isis_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enable_or_disable)
 {
@@ -78,6 +81,31 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
         case CMDCODE_SHOW_NODE_ISIS_PROTOCOL:
         {
             isis_show_node_protocol_state(node);
+            break;
+        }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL:
+        {
+            #if 1 // for test
+            isis_node_info_t *node_info;
+            if(!isis_is_protocol_enable_on_node(node))
+                return;
+            node_info = ISIS_NODE_INFO(node);
+            isis_create_fresh_lsp_pkt(node);
+            isis_lsp_pkt_t *lsp_pkt = node_info->self_lsp_pkt;
+            if(!lsp_pkt)
+                return;
+            #elif
+            assert (rtr_id);
+            uint32_t rtr_id_int = tcp_ip_covert_ip_p_to_n(rtr_id) ;
+            isis_lsp_pkt_t *lsp_pkt = isis_lookup_lsp_from_lsdb(node, rtr_id_int);
+            #endif
+            ethernet_frame_t *lsp_eth_hdr = (ethernet_frame_t *) (lsp_pkt->pkt);
+            size_t pkt_size = lsp_pkt->pkt_size;
+            isis_pkt_hdr_t *lsp_pkt_hdr = (isis_pkt_hdr_t *)(lsp_eth_hdr->payload);
+            size_t lsp_pkt_size = pkt_size - GET_ETH_HDR_SIZE_EXCL_PAYLOAD(lsp_eth_hdr);
+            if (!lsp_pkt) break;
+            isis_show_one_lsp_pkt_detail (NULL, lsp_pkt_hdr, lsp_pkt_size);
+            break;
         }
         default:
             ;
@@ -324,6 +352,36 @@ int isis_show_cli_tree(param_t *param){
         init_param(&isis_proto, CMD, "isis", isis_show_handler, 0, INVALID, 0, "isis protocol");
         libcli_register_param(param, &isis_proto);
         set_param_cmd_code(&isis_proto, CMDCODE_SHOW_NODE_ISIS_PROTOCOL);
+        {
+            /* show node <node-name> protocol isis interface */
+            static param_t interface;
+            init_param(&interface, CMD, "interface",  isis_show_handler, 0, INVALID, 0, "interface");
+            libcli_register_display_callback(&interface, display_node_interfaces);
+            libcli_register_param(&isis_proto, &interface);
+            set_param_cmd_code(&interface, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_INTF);
+            {
+                /* show node <node-name> protocol isis lsdb */
+                static param_t lsdb;
+                init_param(&lsdb, CMD, "lsdb", isis_show_handler, 0, INVALID, 0, "isis lsdb");
+                libcli_register_param(&isis_proto, &lsdb);
+                //set_param_cmd_code(&lsdb, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_LSDB);
+                set_param_cmd_code(&lsdb, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL); // For testing
+                {
+                    static param_t rtr_id;
+                    init_param(&rtr_id, LEAF, 0, isis_show_handler, 0, IPV4, "rtr-id",
+                        "Router-id in A.B.C.D format");
+                    libcli_register_param(&lsdb, &rtr_id);
+                    set_param_cmd_code(&rtr_id, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL);
+                }
+            }
+            {
+                /* show node <node-name> protocol isis adjacency */
+                static param_t adjacency;
+                init_param(&adjacency, CMD, "adjacency", isis_show_handler, 0, INVALID, 0, "adjacency");
+                libcli_register_param(&isis_proto, &adjacency);
+                set_param_cmd_code(&adjacency, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_ADJACENCY);
+            }
+        }
     }
     return 0;
 }
