@@ -632,3 +632,46 @@ cd
 show node R1 proto isis
 show node R2 proto isis
 show node R1 proto isis lsdb
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
+show node R1 proto isis
+show node R2 proto isis
+show node R2 prot isis lsdb
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
+show node R1 proto isi
+show node R2 proto isis lsdb
+show node R2 proto isis lsdb
+show node R1 proto isis lsdb
+show node R2 prot isis lsdb
+show node /
+.
+.
+R1 /
+proto /
+isis /
+lsdb
+lsdb
+lsdb
+.
+.
+.
+lsdb
+lsdb /
+cd
+conf node R1 proto isis /
+int eth2
+cd
+conf node R2 proto isis /
+int eth3
+cd
+show node R1 proto isis
+show node R1 proto isis lsdb

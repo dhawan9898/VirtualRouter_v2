@@ -6,6 +6,7 @@
 #include "isis_adjacency.h"
 #include "isis_const.h"
 #include "isis_pkt.h"
+#include "isis_lsdb.h"
 
 extern display_node_interfaces(param_t *param, ser_buff_t *tlv_buf);
 
@@ -69,7 +70,7 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
         if(strncmp(tlv->leaf_id, "node-name", strlen("node-name")) == 0U)
             node_name = tlv->value;
         else if(strncmp(tlv->leaf_id, "rtr-id", strlen("rtr-id")) == 0U)
-            rtr_id = tlv->value;
+            rtr_id = tlv->value;           
         else
             assert(0);
     }TLV_LOOP_END;
@@ -85,6 +86,7 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
         }
         case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL:
         {
+            printf("%s\n", __FUNCTION__); // To be removed after test
             #if 1 // for test
             isis_node_info_t *node_info;
             if(!isis_is_protocol_enable_on_node(node))
@@ -353,12 +355,14 @@ int isis_show_cli_tree(param_t *param){
         libcli_register_param(param, &isis_proto);
         set_param_cmd_code(&isis_proto, CMDCODE_SHOW_NODE_ISIS_PROTOCOL);
         {
-            /* show node <node-name> protocol isis interface */
-            static param_t interface;
-            init_param(&interface, CMD, "interface",  isis_show_handler, 0, INVALID, 0, "interface");
-            libcli_register_display_callback(&interface, display_node_interfaces);
-            libcli_register_param(&isis_proto, &interface);
-            set_param_cmd_code(&interface, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_INTF);
+            {
+                /* show node <node-name> protocol isis interface */
+                static param_t interface;
+                init_param(&interface, CMD, "interface",  isis_show_handler, 0, INVALID, 0, "interface");
+                libcli_register_display_callback(&interface, display_node_interfaces);
+                libcli_register_param(&isis_proto, &interface);
+                set_param_cmd_code(&interface, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_INTF);
+            }
             {
                 /* show node <node-name> protocol isis lsdb */
                 static param_t lsdb;

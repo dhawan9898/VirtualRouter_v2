@@ -261,7 +261,7 @@ void isis_create_fresh_lsp_pkt(node_t *node)
     isis_pkt_hdr_t *isis_pkt = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_pkt);
     isis_pkt->isis_pkt_type = ISIS_LSP_PKT_TYPE;
     isis_pkt->seq_no++;
-    isis_pkt->rtr_id = tcp_ip_convert_ip_n_to_p(NODE_LO_ADDRESS(node), NULL);
+    isis_pkt->rtr_id = tcp_ip_convert_ip_p_to_n(NODE_LO_ADDRESS(node));
 
     byte *lsp_tlv_buffer = (byte *)(isis_pkt + 1U);
     lsp_tlv_buffer = tlv_buffer_insert_tlv(lsp_tlv_buffer, ISIS_TLV_HOSTNAME, NODE_NAME_SIZE, node->node_name);
