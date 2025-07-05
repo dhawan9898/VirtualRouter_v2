@@ -518,10 +518,8 @@ static int intf_config_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enab
 
 extern void tcp_ip_refresh_tcp_log_file();
 
-static int clear_topology_handler(param_t *param,
-                       ser_buff_t *tlv_buf,
-                       op_mode enable_or_disable){
-
+static int clear_topology_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enable_or_disable)
+{
     int CMDCODE = -1;
 
     CMDCODE = EXTRACT_CMD_CODE(tlv_buf);

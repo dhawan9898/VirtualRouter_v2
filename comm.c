@@ -50,7 +50,7 @@ static void _pkt_receive(node_t *receiving_node, char *pkt_with_aux_data, unsign
     char *recv_intf_name = pkt_with_aux_data;
     interface_t *recv_intf = get_node_intf_by_name(receiving_node, recv_intf_name);
     if(!recv_intf){
-        printf("Packet received on unknown interface\n");
+        printf("Error - %s:Packet received on unknown interface %s\n", __FUNCTION__, recv_intf_name);
         return;
     }
     else{

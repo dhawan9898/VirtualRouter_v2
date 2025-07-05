@@ -713,3 +713,11 @@ cd
 conf node R2 proto isis /
 int eth3
 cd
+clear log
+conf node R0 pro isis /
+interface all
+cd
+conf node R1 pro isis / 
+interface all
+cd
+run ut isis_ut_cross_link_topology.txt 0
