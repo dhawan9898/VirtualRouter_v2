@@ -303,7 +303,8 @@ void layer2_frame_recv(node_t *node, interface_t *interface, char *pkt, unsigned
         printf("L2 frame rejected on node %s\n", node->node_name);
         return;
     }
-    printf("L2 frame accepted on node %s\n", node->node_name);
+    sprintf(tlb, "L2 frame accepted on node %s\n", node->node_name);
+    tcp_trace(node, interface, tlb);
 
     /* handle reception of a L2 frame on an L3 interface */
     if(IS_INTF_L3_MODE(interface)){
@@ -326,7 +327,8 @@ extern void promote_pkt_to_layer3(node_t *node, interface_t *interface, char *pk
 
 static void promote_pkt_to_layer2(node_t *node, interface_t *iif, ethernet_frame_t *eth_frame, unsigned int pkt_size)
 {
-    printf("%s: Info - pkt size is %u\n", __FUNCTION__, pkt_size);
+    sprintf(tlb, "%s: Info - pkt size is %u\n", __FUNCTION__, pkt_size);
+    tcp_trace(node, iif, tlb);
     switch(eth_frame->type)
     {
         case ARP_MSG:
@@ -363,14 +365,15 @@ static void promote_pkt_to_layer2(node_t *node, interface_t *iif, ethernet_frame
 }
 
 static void layer2_pkt_receive_from_top(node_t *node, unsigned int next_hop_ip, char *outgoing_intf, char *pkt, unsigned int pkt_size, int protocol_number)
-{
-    printf("%s: Info - Pkt size is %u\n", __FUNCTION__, pkt_size);
-    printf("%s: Info - Allowed pkt size is %d\n", __FUNCTION__, sizeof(((ethernet_frame_t *)0)->payload));
+{  
+    sprintf(tlb, "%s: Info - Allowed pkt size is %d\n", __FUNCTION__, sizeof(((ethernet_frame_t *)0)->payload));
+    tcp_trace(node, outgoing_intf, tlb);
     assert(pkt_size < sizeof(((ethernet_frame_t *)0)->payload));
     if(protocol_number == ETH_IP){
         ethernet_frame_t * empty_eth_pkt = ALLOC_ETH_HRD_WITH_PAYLOAD(pkt, pkt_size);
         empty_eth_pkt->type = ETH_IP;
-        printf("%s: Info - Pkt received in layer 2\n", __FUNCTION__);
+        sprintf(tlb, "%s: Info - Pkt received in layer 2\n", __FUNCTION__);
+        tcp_trace(node, outgoing_intf, tlb);
         l2_forward_ip_packet(node, next_hop_ip, outgoing_intf, empty_eth_pkt, pkt_size + ETH_HDR_SIZE_EXCL_PAYLOAD);
     }
 }
@@ -392,7 +395,8 @@ bool_t arp_table_entry_add(node_t *node, arp_table_t *arp_table, arp_entry_t *ar
         assert(*arp_pending_list == NULL);
     }
     arp_entry_t *arp_entry_old = arp_table_lookup(arp_table, arp_entry->ip_addr.ip_addr);
-    printf("%s: arp_entry found @ %x\n", __FUNCTION__, arp_entry_old);
+    sprintf(tlb, "%s: arp_entry found @ %x\n", __FUNCTION__, arp_entry_old);
+    tcp_trace(node, NULL, tlb);
     /* Case #0: If ARP table does not exist already, then add it and return TRUE */
     if(!arp_entry_old){
         glthread_add_next(&arp_table->arp_entries, &arp_entry->arp_glue);

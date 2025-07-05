@@ -320,7 +320,7 @@ is_interface_l3_bidirectional(interface_t *interface){
     /* If interface is not configured 
      * with IP address*/
     if(!IS_INTF_L3_MODE(interface)){
-        printf("%s: Interface is not in L3 mode\n", __FUNCTION__);
+        printf("Error - %s: Interface is not in L3 mode\n", __FUNCTION__);
         return FALSE;
     }
 #if 0
@@ -336,12 +336,12 @@ is_interface_l3_bidirectional(interface_t *interface){
             &interface->link->intf2 : &interface->link->intf1;
 
     if(!other_interface){
-        printf("%s: Neighbour interface doesn't exist\n", __FUNCTION__);
+        printf("Error - %s: Neighbour interface doesn't exist\n", __FUNCTION__);
         return FALSE;
     }
 
     if(!IF_IS_UP(interface) || !IF_IS_UP(other_interface)){
-        printf("%s: Interfaces(s) is/are not UP\n", __FUNCTION__);
+        printf("Error - %s: Interfaces(s) is/are not UP\n", __FUNCTION__);
         return FALSE;
     }
 #if 0
@@ -352,16 +352,17 @@ is_interface_l3_bidirectional(interface_t *interface){
 #endif
 
     if(!IS_INTF_L3_MODE(other_interface)){
-        printf("%s: Neighbour interface not in L3 mode\n", __FUNCTION__);
+        printf("Error: %s - Neighbour interface not in L3 mode\n", __FUNCTION__);
         return FALSE;
     }
 
     if(!(is_same_subnet(IF_IP(interface), IF_MASK(interface), IF_IP(other_interface)) &&
         is_same_subnet(IF_IP(other_interface), IF_MASK(other_interface), IF_IP(interface)))){
-        printf("%s: Link between two different subnets\n", __FUNCTION__);
+        printf("Error: %s - Link between two different subnets\n", __FUNCTION__);
         return FALSE;
     }
-    printf("%s: The link is bidirectional and in L3 mode\n", __FUNCTION__);
+    sprintf(tlb, "%s: The link is bidirectional and in L3 mode\n", __FUNCTION__);
+    tcp_trace(interface->att_node, interface, tlb);
     return TRUE;
 }
 bool_t is_same_subnet(char *ip_addr, char mask, char *other_ip_addr){
@@ -374,7 +375,8 @@ bool_t is_same_subnet(char *ip_addr, char mask, char *other_ip_addr){
 
     apply_mask(ip_addr, mask, intf_subnet);
     apply_mask(other_ip_addr, mask, subnet2);
-    printf("%s: comparing %s with %s\n", __FUNCTION__, intf_subnet, subnet2);
+    sprintf(tlb, "%s: comparing %s with %s\n", __FUNCTION__, intf_subnet, subnet2);
+    tcp_trace(NULL, NULL, tlb);
     if(strncmp(intf_subnet, subnet2, 16) == 0){
         return TRUE;
     }

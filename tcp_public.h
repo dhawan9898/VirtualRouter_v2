@@ -28,4 +28,6 @@ extern graph_t *topo;
 
 typedef wheel_timer_elem_t timer_event_handle;
 
+extern char tlb[TCP_LOG_BUFFER_LEN];
+
 #endif

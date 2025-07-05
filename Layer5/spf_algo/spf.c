@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "../../tcp_public.h"
+#include "tcp_ip_trace.h"
 
 #define SPF_LOGGING 1
 
@@ -317,7 +318,8 @@ static void compute_spf(node_t *spf_root)
     char *nxt_hop_ip = NULL;
 
     #if SPF_LOGGING
-    printf("root : %s : Event : Running Spf\n", spf_root->node_name);
+    sprintf(tlb, "root : %s : Event : Running Spf\n", spf_root->node_name);
+    tcp_trace(NULL, NULL, tlb);
     #endif
 
     init_node_spf_data(spf_root, TRUE);
@@ -325,7 +327,7 @@ static void compute_spf(node_t *spf_root)
 
     ITERATE_GLTHREAD_BEGIN(&topo->node_list, curr){
         node = graph_glue_to_node(curr);
-        /* skip root node */
+        /* Skip root node */
         if(node == spf_root)
             continue;
         init_node_spf_data(node, FALSE);
@@ -347,36 +349,37 @@ static void compute_spf(node_t *spf_root)
         curr_spf_data = priority_thread_glue_to_spf_data(curr);
 
         #if SPF_LOGGING
-        printf("root : %s : Event : Node %s taken out of priority queue\n",
-                spf_root->node_name, curr_spf_data->node->node_name);
+        sprintf(tlb, "root : %s : Event : Node %s taken out of priority queue\n", 
+                                    spf_root->node_name, curr_spf_data->node->node_name);
+        tcp_trace(spf_root, NULL, tlb);
         #endif
 
         if(curr_spf_data->node == spf_root){
             ITERATE_NODE_NBRS_BEGIN(curr_spf_data->node, nbr, oif, nxt_hop_ip){
                 if(!is_interface_l3_bidirectional(oif)){
-                    printf("%s: Interface is not L3 and bidirectional\n", __FUNCTION__);
+                    printf("Error - %s: Interface is not L3 and bidirectional\n", __FUNCTION__);
                     continue;
                 }
                 if(IS_GLTHREAD_LIST_EMPTY(&nbr->spf_data->priority_thread_glue)){
 
                     #if SPF_LOGGING
-                    printf("root : %s : Event : Processing Direct Nbr %s\n", 
-                        spf_root->node_name, nbr->node_name);
+                    sprintf(tlb, "root : %s : Event : Processing Direct Nbr %s\n", spf_root->node_name, nbr->node_name);
+                    tcp_trace(NULL, NULL, tlb);
                     #endif
 
                     glthread_priority_insert(&priority_lst, &nbr->spf_data->priority_thread_glue, \
                                              spf_comparison_fn, spf_data_offset_from_priority_thread_glue);
 
                     #if SPF_LOGGING
-                    printf("root : %s : Event : Direct Nbr %s added to priority Queue\n",
-                                        spf_root->node_name, nbr->node_name);
+                    sprintf(tlb, "root : %s : Event : Direct Nbr %s added to priority Queue\n", spf_root->node_name, nbr->node_name);
+                    tcp_trace(NULL, NULL, tlb);
                     #endif                       
                 }
             }ITERATE_NODE_NBRS_END(curr_spf_data->node, nbr, oif, nxt_hop_ip);
 
             #if SPF_LOGGING
-            printf("root : %s : Event : Root %s Processing Finished\n", 
-                    spf_root->node_name, curr_spf_data->node->node_name);
+            sprintf(tlb, "root : %s : Event : Root %s Processing Finished\n", spf_root->node_name, curr_spf_data->node->node_name);
+            tcp_trace(NULL, NULL, tlb);
             #endif
 
             continue;
@@ -391,8 +394,8 @@ static void compute_spf(node_t *spf_root)
     int count = spf_install_routes(spf_root);
 
     #if SPF_LOGGING
-    printf("root : %s : Event : Route Installation Count = %d\n", 
-            spf_root->node_name, count);
+    sprintf(tlb, "root : %s : Event : Route Installation Count = %d\n", spf_root->node_name, count);
+    tcp_trace(NULL, NULL, tlb);
     #endif
 }
 
@@ -470,11 +473,12 @@ static void spf_record_result(node_t *spf_root, node_t *processed_node)
     spf_union_nexthops_arrays(processed_node->spf_data->nexthops, spf_result->nexthops);
 
     #if SPF_LOGGING
-    printf("root : %s : Event : Result Recorded for node %s, "
+    printf(tlb, "root : %s : Event : Result Recorded for node %s, "
             "Next hops : %s, spf_metric = %u\n",
             spf_root->node_name, processed_node->node_name,
             nexthops_str(spf_result->nexthops),
             spf_result->spf_metric);
+    tcp_trace(processed_node, NULL, tlb);
     #endif
     
     /* add the created and updated result data structure to the spf result table
@@ -490,34 +494,33 @@ static void spf_explore_nbrs(node_t *spf_root, node_t *curr_node, glthread_t *pr
     char *nxt_hop_ip = NULL;
 
     #if SPF_LOGGING
-    printf("root : %s : Event : Nbr Exploration Start for Node : %s\n",
-            spf_root->node_name, curr_node->node_name);
+    sprintf(tlb, "root : %s : Event : Nbr Exploration Start for Node : %s\n", spf_root->node_name, curr_node->node_name);
+    tcp_trace(NULL, NULL, tlb);
     #endif
 
     ITERATE_NODE_NBRS_BEGIN(curr_node, nbr, oif, nxt_hop_ip){
 
         #if SPF_LOGGING
-        printf("root : %s : Event : For Node %s , Processing nbr %s\n",
-                spf_root->node_name, curr_node->node_name, 
-                nbr->node_name);
+        sprintf(tlb, "root : %s : Event : For Node %s , Processing nbr %s\n", spf_root->node_name, curr_node->node_name, nbr->node_name);
+        tcp_trace(oif->att_node, oif, tlb);
         #endif
 
         if(!is_interface_l3_bidirectional(oif))
             continue;
 
         #if SPF_LOGGING
-        printf("root : %s : Event : Testing Inequality : " 
-                " spf_metric(%s, %u) + link cost(%u) < spf_metric(%s, %u)\n",
+        sprintf(tlb, "root : %s : Event : Testing Inequality : spf_metric(%s, %u) + link cost(%u) < spf_metric(%s, %u)\n",
                 spf_root->node_name, curr_node->node_name, 
                 curr_node->spf_data->spf_metric,
                 get_link_cost(oif), nbr->node_name, nbr->spf_data->spf_metric);
+        tcp_trace(oif->att_node, oif, tlb);
         #endif
 
         if((SPF_METRIC(curr_node) + get_link_cost(oif)) < SPF_METRIC(nbr)){
 
             #if SPF_LOGGING
-            printf("root : %s : Event : For Node %s , Primary Nexthops Flushed\n",
-                    spf_root->node_name, nbr->node_name);
+            sprintf(tlb, "root : %s : Event : For Node %s , Primary Nexthops Flushed\n", spf_root->node_name, nbr->node_name);
+            tcp_trace(oif->att_node, oif, tlb);
             #endif
 
             /* remove the obsolete nexthops */
@@ -531,10 +534,10 @@ static void spf_explore_nbrs(node_t *spf_root, node_t *curr_node, glthread_t *pr
             SPF_METRIC(nbr) = SPF_METRIC(curr_node) + get_link_cost(oif);
 
             #if SPF_LOGGING
-            printf("root : %s : Event : Primary Nexthops Copied "
-            "from Node %s to Node %s, Next hops : %s\n",
+            sprintf(tlb, "root : %s : Event : Primary Nexthops Copied from Node %s to Node %s, Next hops : %s\n", 
                     spf_root->node_name, curr_node->node_name, 
                     nbr->node_name, nexthops_str(nbr->spf_data->nexthops));
+            tcp_trace(oif->att_node, oif, tlb);
             #endif
 
             /* if the nbr node is already present in PQ, remove it from PQ and add it back,
@@ -542,17 +545,17 @@ static void spf_explore_nbrs(node_t *spf_root, node_t *curr_node, glthread_t *pr
             if(!IS_GLTHREAD_LIST_EMPTY(&nbr->spf_data->priority_thread_glue)){
 
                 #if SPF_LOGGING
-                printf("root : %s : Event : Node %s Already On priority Queue\n",
-                        spf_root->node_name, nbr->node_name);
+                sprintf(tlb, "root : %s : Event : Node %s Already On priority Queue\n", spf_root->node_name, nbr->node_name);
+                tcp_trace(oif->att_node, oif, tlb);
                 #endif
 
                 remove_glthread(&nbr->spf_data->priority_thread_glue);
             }
             
             #if SPF_LOGGING
-            printf("root : %s : Event : Node %s inserted into priority Queue "
-            "with spf_metric = %u\n",
-                    spf_root->node_name,  nbr->node_name, nbr->spf_data->spf_metric);
+            sprintf(tlb, "root : %s : Event : Node %s inserted into priority Queue with spf_metric = %u\n", 
+                            spf_root->node_name,  nbr->node_name, nbr->spf_data->spf_metric);
+            tcp_trace(oif->att_node, oif, tlb);
             #endif
 
             glthread_priority_insert(priority_lst, &nbr->spf_data->priority_thread_glue, \
@@ -562,11 +565,11 @@ static void spf_explore_nbrs(node_t *spf_root, node_t *curr_node, glthread_t *pr
         else if((SPF_METRIC(curr_node) + get_link_cost(oif)) == SPF_METRIC(nbr)){
 
             #if SPF_LOGGING
-            printf("root : %s : Event : Primary Nexthops Union of Current Node"
-                    " %s(%s) with Nbr Node %s(%s)\n",
+            sprintf(tlb, "root : %s : Event : Primary Nexthops Union of Current Node %s(%s) with Nbr Node %s(%s)\n",
                     spf_root->node_name,  curr_node->node_name, 
                     nexthops_str(curr_node->spf_data->nexthops),
                     nbr->node_name, nexthops_str(nbr->spf_data->nexthops));
+            tcp_trace(oif->att_node, oif, tlb);
             #endif
 
             spf_union_nexthops_arrays(curr_node->spf_data->nexthops, nbr->spf_data->nexthops);
@@ -574,9 +577,10 @@ static void spf_explore_nbrs(node_t *spf_root, node_t *curr_node, glthread_t *pr
     }ITERATE_NODE_NBRS_END(curr_node, nbr, oif, nxt_hop_ip);
 
     #if SPF_LOGGING
-    printf("root : %s : Event : Node %s has been processed, nexthops %s\n",
+    sprintf(tlb, "root : %s : Event : Node %s has been processed, nexthops %s\n",
             spf_root->node_name, curr_node->node_name, 
             nexthops_str(curr_node->spf_data->nexthops));
+    tcp_trace(NULL, NULL, tlb);
     #endif
 
     /* If we are done processing the curr node, remove its nexthops and lower its ref_count */
@@ -592,8 +596,10 @@ static void spf_algo_interface_update(void *arg, size_t arg_size){
 	interface_t *interface = intf_notif_data->interface;
 	intf_nw_prop_t *old_intf_nw_props = intf_notif_data->old_intf_nw_prop;
 
-
-	printf("%s() called\n", __FUNCTION__);
+    #if SPF_LOGGING
+	sprintf(tlb, "%s() called\n", __FUNCTION__);
+    tcp_trace(interface->att_node, interface, tlb);
+    #endif
 
     /*Run spf if interface is transition to up/down*/
     if(IS_BIT_SET(flags, IF_UP_DOWN_CHANGE_F) ||

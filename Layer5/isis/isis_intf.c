@@ -94,7 +94,8 @@ void isis_enable_protocol_on_interface(interface_t *intf)
 
     if(isis_intf_info->hello_xmit_timer == NULL){
         if(isis_interface_qualify_to_send_hellos(intf)){
-            printf("%s: Start sending hello pkts\n", __FUNCTION__);
+            //printf("%s: Start sending hello pkts\n", __FUNCTION__);
+            tcp_trace(intf->att_node, intf, "Start sending hello pkts\n");
             isis_start_sending_hellos(intf);
         }
     }
@@ -136,7 +137,6 @@ void isis_start_sending_hellos(interface_t *intf)
                                               sizeof(isis_timer_data_t), 3,
                                               //ISIS_INTF_HELLO_INTERVAL(intf) * 1000,
                                               1);
-    //printf("%s\n",__FUNCTION__);
 }
 
 void isis_stop_sending_hellos(interface_t *intf) {
@@ -208,7 +208,6 @@ static void isis_handle_interface_ip_addr_changed(interface_t *intf, uint32_t ol
         > delete adjacency object if exist */
     if (!IF_IP_EXIST(intf) && old_mask && old_ip_addr)
     {
-
         isis_stop_sending_hellos(intf);
         isis_adjacency_t *adjacency = ISIS_INTF_INFO(intf)->adjacency;
         if (!adjacency)

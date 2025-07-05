@@ -6,7 +6,7 @@
 
 void isis_schedule_lsp_pkt_generation(node_t *node)
 {
-    
+    isis_create_fresh_lsp_pkt(node); // For Test; to be removed
 }
 
 byte *isis_print_lsp_id(isis_lsp_pkt_t *lsp_pkt)
@@ -153,3 +153,4 @@ uint32_t isis_show_one_lsp_pkt_detail(byte *buff, isis_pkt_hdr_t *lsp_pkt_hdr, s
 
    return rc;
 }
+

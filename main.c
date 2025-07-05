@@ -25,8 +25,9 @@ int main(int argc, char **argv)
     //topo = build_dualswitch_topo();
     //topo = linear_3_node_topo(); // to test ping
     //topo = build_square_topo();
+    init_tcp_logging();
     topo = cross_link_topology();
-    dump_nw_graph(topo);
+    //dump_nw_graph(topo);
     /*
     sleep(2);
     node_t *snode = get_node_by_node_name(topo, "R0_re");

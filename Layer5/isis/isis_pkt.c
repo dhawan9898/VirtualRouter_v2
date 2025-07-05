@@ -106,7 +106,8 @@ static void isis_process_hello_pkt(node_t *node, interface_t *iif, ethernet_fram
     /* 5. Reject the pkt if neighbour node's interface IP doesn't fall on the same subnet */
     char *ip_str = tcp_ip_convert_ip_n_to_p(*if_ip_addr_int, 0);
     strncpy(if_ip_addr_str, ip_str, 16U); /* observed stack corruption without this */
-    printf("%s: Hello Pkt received on intf with IP %s/%d from interface with IP %s\n", __FUNCTION__, IF_IP(iif), IF_MASK(iif), if_ip_addr_str);
+    sprintf(tlb, "%s: Hello Pkt received on intf with IP %s/%d from interface with IP %s\n", __FUNCTION__, IF_IP(iif), IF_MASK(iif), if_ip_addr_str);
+    tcp_trace(node, iif, tlb);
     if(!is_same_subnet(IF_IP(iif), IF_MASK(iif), if_ip_addr_str)){
         printf("%s: Error - Hello Pkt from different subnet\n", __FUNCTION__);
         assert(0);
@@ -142,11 +143,13 @@ void isis_pkt_receive(void *arg, size_t arg_size)
     isis_pkt_hdr_t *isis_pkt_hdr = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_hdr);
     switch(isis_pkt_hdr->isis_pkt_type){
         case ISIS_PTP_HELLO_PKT_TYPE:     
-            printf("%s: ISIS - Hello pkt received\n",__FUNCTION__);
+            sprintf(tlb, "%s: ISIS - Hello pkt received\n",__FUNCTION__);
+            tcp_trace(node, iif, tlb);
             isis_process_hello_pkt(node, iif, eth_hdr, pkt_size);
             break;
         case ISIS_LSP_PKT_TYPE:
-            printf("%s: ISIS - LSP pkt received\n", __FUNCTION__);
+            sprintf(tlb, "%s: ISIS - LSP pkt received\n", __FUNCTION__);
+            tcp_trace(node, iif, tlb);
             isis_process_lsp_pkt(node, iif, eth_hdr, pkt_size);
             break;
         default:

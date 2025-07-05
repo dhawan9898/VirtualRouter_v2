@@ -605,4 +605,5 @@ void tcp_trace_internal(node_t *node, interface_t *interface, char *buff, const 
 	}
     fwrite(buff, sizeof(char), strlen(buff), tcp_log_file);
 	fflush(tcp_log_file);
+    //memset(buff, 0, strlen(buff));
 }   

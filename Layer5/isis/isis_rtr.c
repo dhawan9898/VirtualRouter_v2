@@ -4,6 +4,7 @@
 #include "isis_intf.h"
 #include "layer5.h"
 #include "isis_const.h"
+#include "isis_lsdb.h"
 
 bool isis_is_protocol_enable_on_node(node_t *node)
 {
@@ -45,9 +46,10 @@ void isis_init(node_t *node)
     node->node_nw_prop.isis_node_info = node_info;
     node->node_nw_prop.isis_node_info->layer2_mapping = false;
     printf("%s: ISIS Protocol initialized at node level\n", __FUNCTION__);
-    //node_info->seq_no = 0;
+    node_info->seq_no = 0;
 
     tcp_stack_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
+    isis_schedule_lsp_pkt_generation(node);
 }
 
 void isis_de_init(node_t *node)

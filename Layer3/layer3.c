@@ -92,12 +92,15 @@ void rt_table_add_route(rt_table_t *rt_table, char *dst_ip, char mask, char *gw_
     bool_t new_route = FALSE;
     uint32_t idx = 0U;
 
-    printf("%s: Info - Destination Ip is %s\n", __FUNCTION__, dst_ip);
+    sprintf(tlb, "%s: Info - Destination Ip is %s\n", __FUNCTION__, dst_ip);
+    tcp_trace(NULL, NULL, tlb);
     apply_mask(dst_ip, mask, dst_str_with_mask);
-    printf("%s: Info - Masked destination IP (subnet Id) is %s\n", __FUNCTION__, dst_str_with_mask);
+    sprintf(tlb, "%s: Info - Masked destination IP (subnet Id) is %s\n", __FUNCTION__, dst_str_with_mask);
+    tcp_trace(NULL, NULL, tlb);
     inet_pton(AF_INET, dst_str_with_mask, &dst_ip_int);
     dst_ip_int = ntohl(dst_ip_int);//
-    printf("%s: Info - IP as integer is %d\n",__FUNCTION__, dst_ip_int);
+    sprintf(tlb, "%s: Info - IP as integer is %d\n",__FUNCTION__, dst_ip_int);
+    tcp_trace(NULL, NULL, tlb);
     l3_route_t *l3_route = l3rib_lookup(rt_table, dst_ip_int, mask);
     /* Assert if route entry already exist */
     //assert(!l3_route);
@@ -202,14 +205,16 @@ l3_route_t *l3rib_lookup_lpm(rt_table_t *rt_table, uint32_t dst_ip){
         l3_route = rt_glue_to_l3_route(curr);
         memset(subnet, 0, 16);
         apply_mask(dst_ip_str, l3_route->mask_dest_ip, subnet);
-        printf("%s:subnet id of %s with mask %d is %s\n", __FUNCTION__, dst_ip_str, l3_route->mask_dest_ip, subnet);
+        sprintf(tlb, "%s:subnet id of %s with mask %d is %s\n", __FUNCTION__, dst_ip_str, l3_route->mask_dest_ip, subnet);
+        tcp_trace(NULL, NULL, tlb);
 
         if((strncmp("0.0.0.0", l3_route->dest_ip, 16) == 0U) && (l3_route->mask_dest_ip == 0U)){
             default_l3_route = l3_route;
         }
         else if(strncmp(subnet, l3_route->dest_ip, strlen(subnet)) == 0U)
         { 
-            printf("%s:Comparing %s with %s\n", __FUNCTION__, subnet, l3_route->dest_ip);
+            sprintf(tlb, "%s:Comparing %s with %s\n", __FUNCTION__, subnet, l3_route->dest_ip);
+            tcp_trace(NULL, NULL, tlb);
             if(l3_route->mask_dest_ip > longest_mask)
             {
                 longest_mask = l3_route->mask_dest_ip;
@@ -342,7 +347,8 @@ static void layer3_pkt_recv_from_top(node_t *node, char *pkt, unsigned int size,
         free(new_pkt);
         return;
     }
-    printf("%s: Info - L3 route found on %s\n", __FUNCTION__, node->node_name);
+    sprintf(tlb, "%s: Info - L3 route found on %s\n", __FUNCTION__, node->node_name);
+    tcp_trace(node, NULL, tlb);
 
     /* Now resolve next hop */
     bool_t is_direct_route = l3_is_direct_route(l3_route);
@@ -364,7 +370,8 @@ static void layer3_pkt_recv_from_top(node_t *node, char *pkt, unsigned int size,
         /* Case 1 - L3 forwarding */
         inet_pton(AF_INET, nexthop->gw_ip, &next_hop_ip);
         next_hop_ip = htonl(next_hop_ip);
-        printf("%s: Info - Forward the pkt to the found route\n", __FUNCTION__);
+        sprintf(tlb, "%s: Info - Forward the pkt to the found route\n", __FUNCTION__);
+        tcp_trace(node, NULL, tlb);
 #if 0        
     }
     else{
@@ -375,7 +382,8 @@ static void layer3_pkt_recv_from_top(node_t *node, char *pkt, unsigned int size,
         printf("%s: Info - IP belongs to the same subnet or to itself\n", __FUNCTION__);
     }
 #endif
-        printf("%s: Info - pkt size is %u\n", __FUNCTION__, new_pkt_size);
+        sprintf(tlb, "%s: Info - pkt size is %u\n", __FUNCTION__, new_pkt_size);
+        tcp_trace(node, NULL, tlb);
 
         demote_pkt_to_layer2(node, next_hop_ip, is_direct_route? 0 : nexthop->oif, shifted_pkt_buffer, new_pkt_size, ETH_IP);
         free(new_pkt);
@@ -411,7 +419,8 @@ static void layer3_ip_pkt_recv_from_bottom(node_t *node, interface_t *interface,
 
     unsigned int dst_ip = htonl(ip_hdr->dst_ip);
     inet_ntop(AF_INET, &dst_ip, dst_ip_addr, 16);
-    printf("%s: Info - pkt size is %u and dst ip is %s\n", __FUNCTION__, pkt_size, dst_ip_addr);
+    sprintf(tlb, "%s: Info - pkt size is %u and dst ip is %s\n", __FUNCTION__, pkt_size, dst_ip_addr);
+    tcp_trace(node, interface, tlb);
 
     /* Implement layer 3 forwarding */
     l3_route_t * l3_route = l3rib_lookup_lpm(NODE_RT_TABLE(node), ip_hdr->dst_ip);
@@ -430,9 +439,11 @@ static void layer3_ip_pkt_recv_from_bottom(node_t *node, interface_t *interface,
             The destination IP should match with any of the IP of the local interfaces 
             of the router or the loopback address
         */
-       printf("%s: INFO - The L3 route configured is direct\n", __FUNCTION__);
+       sprintf(tlb, "%s: INFO - The L3 route configured is direct\n", __FUNCTION__);
+       tcp_trace(node, interface, tlb);
        if(is_layer3_local_delivery(node, ip_hdr->dst_ip)){
-            printf("%s: INFO - LO or Intf address matches with the destination IP\n", __FUNCTION__);
+            sprintf(tlb, "%s: INFO - LO or Intf address matches with the destination IP\n", __FUNCTION__);
+            tcp_trace(node, interface, tlb);
             l4_hdr = (char *)IP_PKT_PAYLOAD_PTR(ip_hdr);
             l5_hdr = l4_hdr;
             switch(ip_hdr->protocol){
@@ -451,7 +462,8 @@ static void layer3_ip_pkt_recv_from_bottom(node_t *node, interface_t *interface,
             }
             return;
        }
-       printf("%s: INFO - No direct match with destination IP\n", __FUNCTION__);
+       sprintf(tlb, "%s: INFO - No direct match with destination IP\n", __FUNCTION__);
+       tcp_trace(node, interface, tlb);
        /* Case #2: Destination IP address is in one of the sub-net connected to the router
           Do L2 routing  */
 
@@ -461,7 +473,8 @@ static void layer3_ip_pkt_recv_from_bottom(node_t *node, interface_t *interface,
     /* Case #3 : L3 forwarding case */
     ip_hdr->ttl--;
     if(ip_hdr->ttl == 0){
-        printf("Pkt dropped to TTL of 0\n");
+        sprintf(tlb, "Pkt dropped due to TTL of 0\n");
+        tcp_trace(node, interface, tlb);
         return;
     }
     unsigned int next_hop_ip;
@@ -479,7 +492,8 @@ static void layer3_pkt_recv_from_bottom(node_t *node, interface_t *interface, ch
         case ETH_IP:
         case IP_IN_IP:
         {
-            printf("%s: Info - pkt size is %u\n", __FUNCTION__, pkt_size);
+            sprintf(tlb, "%s: Info - pkt size is %u\n", __FUNCTION__, pkt_size);
+            tcp_trace(node, interface, tlb);
             layer3_ip_pkt_recv_from_bottom(node, interface, (ip_hdr_t *)pkt, pkt_size, flags);
             break;
         }

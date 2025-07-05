@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <unistd.h>
-//#include "Layer2/layer2.h"
+#include "tcp_ip_trace.h"
 
 static unsigned int udp_port_number = 40000;
 
@@ -44,7 +44,6 @@ void init_udp_socket(node_t *node)
     }
     node->udp_sock_fd = udp_sock_fd;
 }
-
 extern void layer2_frame_recv(node_t *node, interface_t *interface, char *pkt, unsigned int pkt_size);
 static void _pkt_receive(node_t *receiving_node, char *pkt_with_aux_data, unsigned int pkt_size)
 {
@@ -55,8 +54,9 @@ static void _pkt_receive(node_t *receiving_node, char *pkt_with_aux_data, unsign
         return;
     }
     else{
-        printf("message received : %s, on node %s, by interface %s\n", (pkt_with_aux_data + IF_NAME_SIZE), \
+        sprintf(tlb, "message received : %s, on node %s, by interface %s\n", (pkt_with_aux_data + IF_NAME_SIZE), \
                                                                         receiving_node->node_name, recv_intf_name);
+        tcp_trace(receiving_node, recv_intf, tlb);
     }
 
     /*Interface is not Operationally Up*/
@@ -78,7 +78,8 @@ static int _send_pkt_out(int sock_fd, char *pkt_data, unsigned int pkt_size, uns
     struct sockaddr_in dest_addr;
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = dst_udp_port_no;
-    printf("%s: sending the pkt out ....\n", __FUNCTION__);
+    //printf("%s: sending the pkt out ....\n", __FUNCTION__);
+    tcp_trace(NULL, NULL, "Sending the pkt out ....\n");
     #if 0 // not working
     int dst_addr_int;
     char *localhost = "127.0.0.1";
@@ -91,7 +92,8 @@ static int _send_pkt_out(int sock_fd, char *pkt_data, unsigned int pkt_size, uns
     dest_addr.sin_addr = *((struct in_addr *)host->h_addr);
     
     rc = sendto(sock_fd, pkt_data, pkt_size, 0, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr));
-    printf("%s: Frame sent using sendto() function, which returns %d\n", __FUNCTION__, rc);
+    sprintf(tlb, "%s: Frame sent using sendto() function, which returns %d\n", __FUNCTION__, rc);
+    tcp_trace(NULL, NULL, tlb);
 
     return rc;
 }
@@ -194,7 +196,8 @@ int send_pkt_out(char *pkt, unsigned int pkt_size, interface_t *interface)
     strncpy(pkt_with_aux_data, other_interface->if_name, IF_NAME_SIZE);
     pkt_with_aux_data[15] = '\0';
     memcpy(pkt_with_aux_data + IF_NAME_SIZE, pkt, pkt_size);
-    printf("%s: sending the pkt out ....\n", __FUNCTION__);
+    sprintf(tlb, "%s: sending the pkt out ....\n", __FUNCTION__);
+    tcp_trace(NULL, NULL, tlb);
     rc = _send_pkt_out(sock_fd, pkt_with_aux_data, pkt_size + IF_NAME_SIZE, dst_udp_port_no);
     close(sock_fd);
 

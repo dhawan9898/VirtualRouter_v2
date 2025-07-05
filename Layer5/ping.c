@@ -37,7 +37,7 @@ void layer5_ero_ping_fn(node_t *node, char *dst_ip_addr, char *ero_ip_addr)
     inet_pton(AF_INET, dst_ip_addr, &addr_int);
     addr_int = htonl(addr_int);
     inner_ip_hdr->dst_ip = addr_int;
-    printf("%s: Inner IP address is %s and integer form is %x\n", __FUNCTION__, dst_ip_addr, addr_int);
+    printf("%s: Inner IP address is %s and integer from is %x\n", __FUNCTION__, dst_ip_addr, addr_int);
 
     addr_int = 0;
     inet_pton(AF_INET, ero_ip_addr, &addr_int);

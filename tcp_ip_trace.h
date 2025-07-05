@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "CommandParser/libcli.h"
 #include "CommandParser/cmdtlv.h"
+#include "tcpconst.h"
 
 #define TCP_PRINT_BUFFER_SIZE 1024
 #define TCP_GET_NODE_SEND_LOG_BUFFER(node) (node->node_nw_prop.send_log_buffer)
@@ -30,6 +31,7 @@ typedef struct log_{
     FILE *log_file;
 }log_t;
 
+extern char tlb[TCP_LOG_BUFFER_LEN];
 
 void tcp_ip_init_node_log_info(node_t *node);
 void tcp_ip_set_all_log_info_params(log_t *log_info, bool_t status);

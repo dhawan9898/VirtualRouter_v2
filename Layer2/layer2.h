@@ -212,7 +212,8 @@ static inline bool_t l2_frame_recv_qualify_on_interface(interface_t *intf, ether
     vlan_8021q_hdr_t *vlan_hdr = is_pkt_vlan_tagged(frame);
 
     if(vlan_hdr){
-        printf("Info: Pkt vlan tagged\n");
+        sprintf(tlb, "Info: Pkt vlan tagged\n");
+        tcp_trace(intf->att_node, intf, tlb);
         intf_vlan_id = get_access_intf_operating_vlan_id(intf);
         pkt_vlan_id = GET_802_1Q_VLAN_ID(vlan_hdr);
     }
@@ -287,7 +288,8 @@ static inline bool_t l2_frame_recv_qualify_on_interface(interface_t *intf, ether
         /* Case 1: if untagged frame, and mac is broadcast address */
         if (IS_MAC_BROADCAST_ADDR(frame->dst_mac.mac_addr)) // some memory issue found. need to debug.
         {
-            printf("Info: Allow untagged pkt Mac broadcast in L3 mode\n");
+            sprintf(tlb, "Info: Allow untagged pkt Mac broadcast in L3 mode\n");
+            tcp_trace(intf->att_node, intf, tlb);
             return TRUE;
         }
     }
