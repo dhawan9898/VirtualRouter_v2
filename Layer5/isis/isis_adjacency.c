@@ -135,6 +135,28 @@ void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces) {
     }
 }
 
+void isis_show_all_adjacencies(node_t *node)
+{
+    uint32_t rc = 0;
+    interface_t *intf;
+    isis_adjacency_t *adjacency;
+
+    ITERATE_NODE_INTERFACES_BEGIN (node, intf) {
+
+        if (!isis_node_intf_is_enable(intf)) 
+            continue;
+      
+        adjacency = ISIS_INTF_INFO(intf)->adjacency;
+        if (!adjacency) 
+            continue;
+
+        printf( "%-16s   %-16s   %-6s   %s\n", intf->if_name, adjacency->nbr_name,
+                                                isis_adj_state_str(adjacency->adj_state),
+                                                hrs_min_sec_format((unsigned int)difftime(time(NULL), adjacency->uptime)));
+
+    } ITERATE_NODE_INTERFACES_END (node, intf);  
+}
+
 void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tlv_buffer, size_t tlv_buff_size)
 {
     /* Algorithm: */

@@ -6,6 +6,15 @@
 #include "isis_const.h"
 #include "isis_lsdb.h"
 
+static void isis_node_cancel_all_queued_jobs(node_t *node)
+{
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+    if(node_info->lsp_pkt_gen_task){
+        task_cancel_job(node_info->lsp_pkt_gen_task);
+        node_info->lsp_pkt_gen_task = NULL;
+    }
+}
+
 bool isis_is_protocol_enable_on_node(node_t *node)
 {
     if(ISIS_NODE_INFO(node))
@@ -61,6 +70,7 @@ void isis_de_init(node_t *node)
         free(node_info);
         node->node_nw_prop.isis_node_info = node_info;
     }
+    isis_node_cancel_all_queued_jobs(node);
     tcp_stack_de_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
 }
 
@@ -71,3 +81,4 @@ void isis_one_time_registration(void)
     /* register for notification to isis trace pkts */
     nfc_register_for_pkt_tracing(ISIS_ETH_PKT_TYPE, isis_print_pkt);
 }
+

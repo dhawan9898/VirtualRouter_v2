@@ -35,6 +35,8 @@ Known Issues:
 29-07-2025: CLIs for hello interval update and authentication check implemented, but crashes - Bugfix planned.
 30-07-2025: crash seen while attempting to refresh the expiry timer of adjacencies using resurrect_timer() API - Bugfix planned (solved)
 30-07-2025: ARP table creation using Hello pkts (l2 mapping) not working - Bugfix planned
+06-07-2025: Hello pkts malformed during reception whan all nodes are enabled for isis - Bugfix planned
+06-07-2025: "conf node R2 protocol isis adjacency" command not printing adjacency info - Bugfix planned 
 
 
 Solved Issues:
@@ -43,4 +45,4 @@ Solved Issues:
 11-06-2025: Ping utility (without ERO) re-tested with routing table fixes. (Ping ERO issue still exist)
 13-07-2025: Ping issue with ERO is fixed now 
 24-07-2025: Trace could be enabled without crash
-30-07-2025: Crash seen while attempting to refresh teh expiry timer is now solved
+30-07-2025: Crash seen while attempting to refresh the expiry timer is now solved

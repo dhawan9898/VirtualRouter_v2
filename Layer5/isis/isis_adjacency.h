@@ -48,6 +48,7 @@ typedef struct isis_adjacency_{
 
 void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tlv_buffer, size_t tlv_buff_size);
 void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces);
+void isis_show_all_adjacencies(node_t *node);
 isis_adj_state_t isis_get_next_adj_state_on_receiving_next_hello(isis_adjacency_t *adjacency);
 void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t new_adj_state);
 void isis_adjacency_set_uptime(isis_adjacency_t *adjacency);

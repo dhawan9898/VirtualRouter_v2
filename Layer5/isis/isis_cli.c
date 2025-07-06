@@ -109,6 +109,11 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
             isis_show_one_lsp_pkt_detail (NULL, lsp_pkt_hdr, lsp_pkt_size);
             break;
         }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_ADJACENCY:
+        {
+            isis_show_all_adjacencies(node);
+            break;
+        }
         default:
             ;
     }

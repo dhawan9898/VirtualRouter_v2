@@ -738,3 +738,8 @@ show node R2 proto isis
 show node R3 proto isis
 conf node R3 no proto isis
 show node R2 proto isis ls
+run ut Layer5/isis/isis_ut_cross_link_topology.txt 0
+show node R2 proto isis
+show node R3 proto isis
+conf node R3 no proto isis
+show node R2 proto isis  ls
