@@ -2,11 +2,33 @@
 #include "isis_lsdb.h"
 #include "isis_pkt.h"
 #include "isis_const.h"
+#include "isis_rtr.h"
 
+static void isis_generate_lsp_pkt(void *arg, uint32_t arg_size)
+{
+    node_t *node = (node_t *)arg;
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+
+    sprintf(tlb, "Asyncronous LSP generation task %p triggered\n", node_info->lsp_pkt_gen_task);
+    tcp_trace(node, NULL, tlb);
+    node_info->lsp_pkt_gen_task = NULL;
+    isis_create_fresh_lsp_pkt(node);
+}
 
 void isis_schedule_lsp_pkt_generation(node_t *node)
 {
-    isis_create_fresh_lsp_pkt(node); // For Test; to be removed
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+    if(!node_info)
+        return;
+    if(node_info->lsp_pkt_gen_task){
+        sprintf(tlb, "LSP generation already scheduled\n");
+        tcp_trace(node, NULL, tlb);
+        return;
+    }
+    node_info->lsp_pkt_gen_task = task_create_new_job(node, isis_generate_lsp_pkt, TASK_ONE_SHOT);
+    sprintf(tlb, "LSP generation task scheduled\n");
+    tcp_trace(node, NULL, tlb);
+    //isis_create_fresh_lsp_pkt(node); // For Test; to be removed
 }
 
 byte *isis_print_lsp_id(isis_lsp_pkt_t *lsp_pkt)

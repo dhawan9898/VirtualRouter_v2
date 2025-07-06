@@ -1,0 +1,22 @@
+:CMD: show node R2 proto isis adj
+:CMD: show node R2 proto isis ls
+:CMD: show node R3 no proto isis
+:CMD: show node R2 proto isis adj
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis adj
+:CMD: show node R3 proto isis /
+:CMD: interface all
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis adj
+:CMD: conf node R3 interface eth9 ip-add 50.1.1.10 24
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis ls
+:CMD: show node R2 proto isis adj
+
+
+

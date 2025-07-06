@@ -721,3 +721,20 @@ conf node R1 pro isis /
 interface all
 cd
 run ut isis_ut_cross_link_topology.txt 0
+run ut Layer5/isis/isis_ut_cross_link_topology.txt 0
+run ut Layer5/isis/isis_ut_cross_link_topology.txt 0
+run ut Layer5/isis/isis_ut_cross_link_topology.txt 0
+show node R2 proto isis adj
+show node R2 proto isis adj
+show node R2 proto isis ls
+run ut Layer5/isis/isis_ut_cross_link_topology.txt 0
+show node R2 proto isis 
+show node R3 proto isis adj
+show node R2 proto isis
+show node R2 proto isis ls
+conf node R3 no proto isis
+run ut Layer5/isis/isis_ut_cross_link_topology.txt 0
+show node R2 proto isis
+show node R3 proto isis
+conf node R3 no proto isis
+show node R2 proto isis ls
