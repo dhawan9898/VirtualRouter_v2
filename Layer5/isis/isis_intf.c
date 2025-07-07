@@ -13,6 +13,27 @@
 
 extern char tlb[TCP_LOG_BUFFER_LEN];
 
+static void isis_free_intf_info(interface_t *intf)
+{
+    if(!ISIS_INTF_INFO(intf))
+        return;
+    free(ISIS_INTF_INFO(intf));
+    intf->intf_nw_prop.isis_intf_info = NULL;
+}
+
+static void isis_check_and_delete_intf_info(interface_t *intf)
+{
+    isis_intf_info_t *intf_info;
+
+    intf_info = ISIS_INTF_INFO(intf);
+    if(!intf_info)
+        return;
+    if(intf_info->hello_xmit_timer || intf_info->adjacency || !IS_GLTHREAD_LIST_EMPTY(&intf_info->lsp_xmit_list_head)){
+        assert(0);
+    }
+    isis_free_intf_info(intf);
+}
+
 bool isis_node_intf_is_enable(interface_t *intf) {
 
     return !(intf->intf_nw_prop.isis_intf_info == NULL);
@@ -112,8 +133,8 @@ void isis_disable_protocol_on_interface(interface_t *intf)
 
     isis_stop_sending_hellos(intf);
     isis_delete_adjacency(isis_intf_info->adjacency);
-    free(isis_intf_info);
-    intf->intf_nw_prop.isis_intf_info = NULL;
+    isis_intf_purge_lsp_xmit_queue(intf);
+    isis_check_and_delete_intf_info(intf);
 }
 
 void isis_start_sending_hellos(interface_t *intf)

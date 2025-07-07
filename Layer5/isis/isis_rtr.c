@@ -78,13 +78,19 @@ void isis_init(node_t *node)
 
 void isis_de_init(node_t *node)
 {
-    isis_node_info_t *node_info = NULL;
-
+    isis_node_info_t *node_info;
+    interface_t *intf;
     node_info = ISIS_NODE_INFO(node);
-    if(node_info){
-        free(node_info);
-        node->node_nw_prop.isis_node_info = node_info;
-    }
+
+    ITERATE_NODE_INTERFACES_BEGIN(node, intf){
+
+        isis_disable_protocol_on_interface(intf);
+
+    }ITERATE_NODE_INTERFACES_END(node, intf);
+
+    if(node_info->self_lsp_pkt)
+        isis_ref_isis_pkt(node_info->self_lsp_pkt);
+
     isis_node_cancel_all_queued_jobs(node);
     isis_stop_lsp_pkt_periodic_flooding(node);
     isis_check_delete_node_info(node);

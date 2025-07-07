@@ -42,7 +42,7 @@ static void isis_lsp_xmit_job(void *arg, uint32_t arg_size)
        
         send_pkt_out(lsp_pkt->pkt, lsp_pkt->pkt_size, intf);
         ISIS_INTF_INCREMENT_STATS(intf, lsp_pkt_sent);
-        isis_deref_isis_pkt(lsp_pkt);
+        isis_deref_isis_pkt(lsp_pkt); /* decrement the ref count, upon lsp packet being transmitted */
 
     } ITERATE_GLTHREAD_END(&intf_info->lsp_xmit_list_head, curr);   
 }
@@ -82,7 +82,7 @@ void isis_queue_lsp_pkt_for_transmission(interface_t *intf, isis_lsp_pkt_t *lsp_
     isis_lsp_xmit_elem_t *lsp_xmit_elem = calloc(1, sizeof(isis_lsp_xmit_elem_t));
     init_glthread(&lsp_xmit_elem->glue);
     lsp_xmit_elem->lsp_pkt = lsp_pkt;
-    isis_ref_isis_pkt(lsp_xmit_elem->lsp_pkt);
+    isis_ref_isis_pkt(lsp_xmit_elem->lsp_pkt); /* increase the ref count to keep track of the self_lsp_pkt pointer being used in queues */
     glthread_add_last(&intf_info->lsp_xmit_list_head, &lsp_xmit_elem->glue);
     sprintf(tlb, "%s : LSP %s scheduled to flood out of %s\n", ISIS_LSPDB_TRACE, isis_print_lsp_id(lsp_pkt), intf->if_name);
     tcp_trace(intf->att_node, intf, tlb);
@@ -113,6 +113,34 @@ void isis_schedule_lsp_flood(node_t *node, isis_lsp_pkt_t *lsp_pkt, interface_t 
 
         isis_queue_lsp_pkt_for_transmission(intf, lsp_pkt);
     }ITERATE_NODE_INTERFACES_END(node, intf);
+}
+
+void isis_intf_purge_lsp_xmit_queue(interface_t *intf)
+{
+    glthread_t *curr;
+    isis_lsp_pkt_t *lsp_pkt;
+    isis_intf_info_t *intf_info;
+    isis_lsp_xmit_elem_t *lsp_xmit_elem;
+
+    if(!isis_node_intf_is_enable(intf))
+        return;
+    intf_info = ISIS_INTF_INFO(intf);
+
+    /* Clear the dispatch queue */
+    ITERATE_GLTHREAD_BEGIN(&intf_info->lsp_xmit_list_head, curr){
+
+        lsp_xmit_elem = glue_to_lsp_xmit_elem(curr);
+        remove_glthread(curr);
+        lsp_pkt = lsp_xmit_elem->lsp_pkt;
+        free(lsp_xmit_elem);
+        isis_deref_isis_pkt(lsp_pkt);
+    }ITERATE_GLTHREAD_END(&intf_info->lsp_xmit_list_head, curr);
+
+    /* clear the dispatch task/job */
+    if(intf_info->lsp_xmit_job){
+        task_cancel_job(intf_info->lsp_xmit_job);
+        intf_info->lsp_xmit_job = NULL;
+    }
 }
 
 void isis_enter_reconciliation_phase(node_t *node)

@@ -272,8 +272,7 @@ void isis_create_fresh_lsp_pkt(node_t *node)
     lsp_tlv_buffer = isis_encode_all_nbr_tlvs(node, lsp_tlv_buffer);
 
     if(node_info->self_lsp_pkt){
-        tcp_ip_free_pkt_buffer(node_info->self_lsp_pkt->pkt, lsp_size_estimate);
-        free(node_info->self_lsp_pkt);
+        isis_deref_isis_pkt(node_info->self_lsp_pkt);
         node_info->self_lsp_pkt = NULL;
     }
 
@@ -281,6 +280,7 @@ void isis_create_fresh_lsp_pkt(node_t *node)
     node_info->self_lsp_pkt = calloc(1, sizeof(isis_lsp_pkt_t));
     node_info->self_lsp_pkt->pkt = (byte *)eth_pkt;
     node_info->self_lsp_pkt->pkt_size = lsp_size_estimate;
+    isis_ref_isis_pkt(node_info->self_lsp_pkt);
 }
 
 uint32_t *isis_get_lsp_pkt_rtr_id(isis_lsp_pkt_t *lsp_pkt)

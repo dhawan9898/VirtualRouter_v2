@@ -3,6 +3,7 @@
 #include "isis_pkt.h"
 #include "isis_const.h"
 #include "isis_rtr.h"
+#include "isis_flood.h"
 
 static void isis_generate_lsp_pkt(void *arg, uint32_t arg_size)
 {
@@ -13,6 +14,7 @@ static void isis_generate_lsp_pkt(void *arg, uint32_t arg_size)
     tcp_trace(node, NULL, tlb);
     node_info->lsp_pkt_gen_task = NULL;
     isis_create_fresh_lsp_pkt(node);
+    isis_schedule_lsp_flood(node, node_info->self_lsp_pkt, NULL);
 }
 
 void isis_schedule_lsp_pkt_generation(node_t *node)
