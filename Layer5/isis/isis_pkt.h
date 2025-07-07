@@ -1,8 +1,10 @@
 #ifndef __ISIS_PKT__
 #define __ISIS_PKT__
+#include "../../avlTree/avlTree.h"
 
 typedef uint16_t isis_pkt_type_t;
 typedef uint8_t  isis_pkt_hdr_flags_t;
+
 
 #pragma pack (push, 1)
 typedef struct isis_pkt_hdr_{
@@ -18,7 +20,8 @@ typedef struct isis_lsp_pkt_{
     byte *pkt;
     /* size of lsp pkt including  ethenet encapsulation */
     size_t pkt_size;
-
+    /* glue to attach this lsp pkt to lspdb*/
+    avltree_node_t avl_node_glue;
     /* Ref_count */
     uint16_t ref_count;
 }isis_lsp_pkt_t;

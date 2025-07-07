@@ -2,6 +2,7 @@
 #define __ISIS_RTR_H__
 
 #include "../../EventDispatcher/event_dispatcher.h"
+#include "../../avlTree/avlTree.h"
 
 typedef struct isis_lsp_pkt_ isis_lsp_pkt_t; 
 
@@ -18,6 +19,8 @@ typedef struct isis_node_info_{
     uint32_t seq_no;
     /* Pointer to cached copy of own LSP */
     isis_lsp_pkt_t *self_lsp_pkt;
+    /* LSP DB */
+    avltree_t lspdb_avl_root;
     /* Task to schedule self LSP pkt generation */
     task_t *lsp_pkt_gen_task;
     /* Timer to flood lsp packet periodically*/

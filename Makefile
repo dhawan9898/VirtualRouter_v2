@@ -31,7 +31,8 @@ OBJS=_out/glueThread/glthread.o	\
 		_out/Layer5/isis/isis_flood.o\
 		_out/Layer5/isis/isis_l2map.o\
 		_out/Layer5/isis/isis_adjacency.o	\
-		_out/EventDispatcher/event_dispatcher.o
+		_out/EventDispatcher/event_dispatcher.o	\
+		_out/avlTree/avlTree.o
 
 _out/VirtualRouter.exe:${OBJS} CommandParser/libcli.a
 	${CC} ${CFLAGS} ${OBJS} -o _out/VirtualRouter.exe ${LIBS}
@@ -132,6 +133,9 @@ _out/Layer5/isis/isis_flood.o:Layer5/isis/isis_flood.c
 _out/Layer5/isis/isis_l2map.o:Layer5/isis/isis_l2map.c
 	${CC} ${CFLAGS} -c Layer5/isis/isis_l2map.c -I . -I Layer5/ -o _out/Layer5/isis/isis_l2map.o
 
+_out/avlTree/avlTree.o:avlTree/avlTree.c
+	${CC} ${CFLAGS} -c avlTree/avlTree.c -I . -o _out/avlTree/avlTree.o
+
 CommandParser/libcli.a:
 	(cd CommandParser; make)
 
@@ -144,6 +148,8 @@ clean:
 	rm _out/Layer5/spf_algo/*.o
 	rm _out/WheelTimer/*.o
 	rm _out/Layer5/isis/*.o
+	rm _out/EventDispatcher/*.o
+	rm _out/avlTree/*.o
 	rm _out/*.exe
 	#rmdir _out -r
 	(cd CommandParser; make clean)

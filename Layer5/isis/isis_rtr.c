@@ -29,6 +29,21 @@ static void isis_check_delete_node_info(node_t *node)
     node->node_nw_prop.isis_node_info = NULL;
 }
 
+static int isis_compare_lspdb_lsp_pkt(const avltree_node_t *n1, const avltree_node_t *n2)
+{
+    isis_lsp_pkt_t *lsp_pkt1 = avltree_container_of(n1, isis_lsp_pkt_t, avl_node_glue);
+    isis_lsp_pkt_t *lsp_pkt2 = avltree_container_of(n2, isis_lsp_pkt_t, avl_node_glue);
+
+    uint32_t *rtr_id1 = isis_get_lsp_pkt_rtr_id(lsp_pkt1);
+    uint32_t *rtr_id2 = isis_get_lsp_pkt_rtr_id(lsp_pkt2);
+
+    if(*rtr_id1 < *rtr_id2)
+        return -1;
+    if(*rtr_id1 > *rtr_id2)
+        return 1;
+    return 0;
+} 
+
 bool isis_is_protocol_enable_on_node(node_t *node)
 {
     if(ISIS_NODE_INFO(node))
@@ -71,6 +86,7 @@ void isis_init(node_t *node)
     printf("%s: ISIS Protocol initialized at node level\n", __FUNCTION__);
     node_info->seq_no = 0;
 
+    avltree_init(&node_info->lspdb_avl_root, isis_compare_lspdb_lsp_pkt);
     tcp_stack_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
     isis_schedule_lsp_pkt_generation(node);
     isis_start_lsp_pkt_periodic_flooding(node);
