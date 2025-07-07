@@ -6,6 +6,9 @@
 #include "../glueThread/glthread.h"
 #include "timerlib.h"
 
+#define timer_register_app_event register_app_event
+#define timer_de_register_app_event de_register_app_event
+
 typedef struct _wheel_timer_elem_t wheel_timer_elem_t;
 typedef void (*app_call_back)(void *arg, uint32_t sizeof_arg);
 typedef struct _wheel_timer_t wheel_timer_t;

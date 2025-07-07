@@ -110,8 +110,7 @@ void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces) {
     PRINT_TABS(tab_spaces);
 
     if (adjacency->expiry_timer) {
-        printf("Expiry Timer Remaining : %u msec\n",
-                wt_get_remaining_time(adjacency->expiry_timer));
+        printf("Expiry Timer Remaining : %u msec\n", wt_get_remaining_time(adjacency->expiry_timer));
     }
     else {
         printf("Expiry Timer : Nil\n");
@@ -120,8 +119,7 @@ void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces) {
     PRINT_TABS(tab_spaces);
 
     if (adjacency->delete_timer) {
-         printf("Delete Timer Remaining : %u msec\n",
-            wt_get_remaining_time(adjacency->delete_timer));
+         printf("Delete Timer Remaining : %u msec\n", wt_get_remaining_time(adjacency->delete_timer));
     }
     else {
         printf("Delete Timer : Nil\n");
@@ -130,8 +128,7 @@ void isis_show_adjacency( isis_adjacency_t *adjacency, uint8_t tab_spaces) {
     if (adjacency->adj_state == ISIS_ADJ_STATE_UP) {
 
         PRINT_TABS(tab_spaces);
-        printf("Up Time : %s\n", hrs_min_sec_format(
-                (unsigned int)difftime(time(NULL), adjacency->uptime)));
+        printf("Up Time : %s\n", hrs_min_sec_format((unsigned int)difftime(time(NULL), adjacency->uptime)));
     }
 }
 

@@ -1,12 +1,12 @@
 :CMD: show node R2 proto isis adj
 :CMD: show node R2 proto isis ls
-:CMD: show node R3 no proto isis
+:CMD: conf node R3 no proto isis
 :CMD: show node R2 proto isis adj
 :CMD: show node R2 proto isis ls
 :CMD: show node R2 proto isis ls
 :CMD: show node R2 proto isis ls
 :CMD: show node R2 proto isis adj
-:CMD: show node R3 proto isis /
+:CMD: conf node R3 proto isis /
 :CMD: interface all
 :CMD: show node R2 proto isis ls
 :CMD: show node R2 proto isis ls

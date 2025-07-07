@@ -25,6 +25,10 @@ typedef struct isis_intf_info_{
     uint32_t lsp_pkt_sent;
     uint32_t good_lsp_pkt_recvd;
     uint32_t bad_lsp_pkt_recvd;
+    /* To queue LSP pkts at interface level */
+    glthread_t lsp_xmit_list_head;
+    /* periodic task to sen out the lsp pkt from queue */
+    task_t *lsp_xmit_job;
 
 }isis_intf_info_t;
 

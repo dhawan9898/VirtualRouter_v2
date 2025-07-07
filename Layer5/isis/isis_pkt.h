@@ -18,6 +18,9 @@ typedef struct isis_lsp_pkt_{
     byte *pkt;
     /* size of lsp pkt including  ethenet encapsulation */
     size_t pkt_size;
+
+    /* Ref_count */
+    uint16_t ref_count;
 }isis_lsp_pkt_t;
 
 bool isis_pkt_trap_rule(char *pkt, size_t pkt_size);
@@ -33,5 +36,9 @@ void isis_create_fresh_lsp_pkt(node_t *node);
 uint32_t *isis_get_lsp_pkt_rtr_id(isis_lsp_pkt_t *lsp_pkt);
 
 uint32_t *isis_get_lsp_pkt_seq_no(isis_lsp_pkt_t *lsp_pkt);
+
+void isis_ref_isis_pkt(isis_lsp_pkt_t *lsp_pkt);
+
+void isis_deref_isis_pkt(isis_lsp_pkt_t *lsp_pkt);
 
 #endif

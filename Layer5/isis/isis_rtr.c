@@ -5,6 +5,7 @@
 #include "layer5.h"
 #include "isis_const.h"
 #include "isis_lsdb.h"
+#include "isis_flood.h"
 
 static void isis_node_cancel_all_queued_jobs(node_t *node)
 {
@@ -13,6 +14,19 @@ static void isis_node_cancel_all_queued_jobs(node_t *node)
         task_cancel_job(node_info->lsp_pkt_gen_task);
         node_info->lsp_pkt_gen_task = NULL;
     }
+}
+
+static void isis_check_delete_node_info(node_t *node)
+{
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+    if(!node_info)
+        return;
+    /* Place assert checks */
+    assert(node_info->lsp_pkt_gen_task == NULL);
+    assert(node_info->periodic_lsp_flood_timer == NULL);
+
+    free(node_info);
+    node->node_nw_prop.isis_node_info = NULL;
 }
 
 bool isis_is_protocol_enable_on_node(node_t *node)
@@ -59,6 +73,7 @@ void isis_init(node_t *node)
 
     tcp_stack_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
     isis_schedule_lsp_pkt_generation(node);
+    isis_start_lsp_pkt_periodic_flooding(node);
 }
 
 void isis_de_init(node_t *node)
@@ -71,6 +86,8 @@ void isis_de_init(node_t *node)
         node->node_nw_prop.isis_node_info = node_info;
     }
     isis_node_cancel_all_queued_jobs(node);
+    isis_stop_lsp_pkt_periodic_flooding(node);
+    isis_check_delete_node_info(node);
     tcp_stack_de_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
 }
 

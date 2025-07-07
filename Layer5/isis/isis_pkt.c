@@ -5,6 +5,7 @@
 #include "isis_rtr.h"
 #include "isis_adjacency.h"
 #include "layer5.h"
+#include <assert.h>
 
 
 static uint32_t isis_print_hello_pkt(byte *buff, isis_pkt_hdr_t *hello_pkt_hdr, uint32_t pkt_size)
@@ -294,4 +295,22 @@ uint32_t *isis_get_lsp_pkt_seq_no(isis_lsp_pkt_t *lsp_pkt)
     ethernet_frame_t *eth_pkt = (ethernet_frame_t *)lsp_pkt->pkt;
     isis_pkt_hdr_t *isis_pkt = (isis_pkt_hdr_t *)GET_ETHERNET_HDR_PAYLOAD(eth_pkt);
     return (uint32_t *)&isis_pkt->seq_no;
+}
+
+void isis_deref_isis_pkt(isis_lsp_pkt_t *lsp_pkt) {
+
+    assert(lsp_pkt->ref_count);
+
+    lsp_pkt->ref_count--;
+
+    if (lsp_pkt->ref_count == 0) {
+
+        tcp_ip_free_pkt_buffer(lsp_pkt->pkt, lsp_pkt->pkt_size);
+        free(lsp_pkt);
+    }
+}
+
+void isis_ref_isis_pkt(isis_lsp_pkt_t *lsp_pkt)  {
+
+    lsp_pkt->ref_count++;
 }

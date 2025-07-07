@@ -20,6 +20,8 @@ typedef struct isis_node_info_{
     isis_lsp_pkt_t *self_lsp_pkt;
     /* Task to schedule self LSP pkt generation */
     task_t *lsp_pkt_gen_task;
+    /* Timer to flood lsp packet periodically*/
+    timer_event_handle *periodic_lsp_flood_timer;
     /*Layer 2 Mapping */
     bool layer2_mapping;
 }isis_node_info_t;

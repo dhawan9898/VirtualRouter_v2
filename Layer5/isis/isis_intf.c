@@ -44,26 +44,28 @@ void isis_show_interface_protocol_state(interface_t *intf) {
     is_enabled = isis_node_intf_is_enable(intf);
 
     printf(" %s : %sabled\n", intf->if_name, is_enabled ? "En" : "Dis");
-    
-    if(!is_enabled) return;
+
+    if (!is_enabled)
+        return;
 
     isis_intf_info = ISIS_INTF_INFO(intf);
-  
+
     PRINT_TABS(2);
     printf("hello interval : %u sec, Intf Cost : %u\n",
-        isis_intf_info->hello_interval, isis_intf_info->cost);
+           isis_intf_info->hello_interval, isis_intf_info->cost);
 
     PRINT_TABS(2);
     printf("hello Transmission : %s\n",
-        ISIS_INTF_HELLO_XMIT_TIMER(intf) ? "On" : "Off");  
+           ISIS_INTF_HELLO_XMIT_TIMER(intf) ? "On" : "Off");
 
     PRINT_TABS(2);
     printf("Adjacencies :\n");
 
-   adjacency = isis_intf_info->adjacency;
-   if (!adjacency) return;
-   isis_show_adjacency(adjacency, 4);
-   printf("\n");
+    adjacency = isis_intf_info->adjacency;
+    if (!adjacency)
+        return;
+    isis_show_adjacency(adjacency, 4);
+    printf("\n");
 }
 
 void isis_enable_protocol_on_interface(interface_t *intf)
