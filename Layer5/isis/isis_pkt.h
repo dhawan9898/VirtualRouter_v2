@@ -22,8 +22,12 @@ typedef struct isis_lsp_pkt_{
     size_t pkt_size;
     /* glue to attach this lsp pkt to lspdb*/
     avltree_node_t avl_node_glue;
+    /* indicator for lsp pkt installation in lspbd */
+    bool installed_in_db;
     /* Ref_count */
     uint16_t ref_count;
+    /* life time timer */
+    timer_event_handle *expiry_timer;
 }isis_lsp_pkt_t;
 
 bool isis_pkt_trap_rule(char *pkt, size_t pkt_size);
