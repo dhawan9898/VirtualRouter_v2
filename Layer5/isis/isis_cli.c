@@ -84,10 +84,30 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
             isis_show_node_protocol_state(node);
             break;
         }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_INTF:
+        {
+            intf = get_node_by_node_name(node, intf_name);
+            if(!intf){
+                printf("%s: Error - Non-existing interface\n");
+                return -1;
+            }
+            isis_show_one_intf_stats(intf);
+            break;
+        }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_INTF:
+        {
+            isis_show_all_intf_stats(node);
+            break;
+        }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_LSDB:
+        {
+            isis_show_lspdb(node);
+            break;
+        }
         case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL:
         {
             printf("%s\n", __FUNCTION__); // To be removed after test
-            #if 1 // for test
+            #if 0 // for test
             isis_node_info_t *node_info;
             if(!isis_is_protocol_enable_on_node(node))
                 return;
@@ -96,10 +116,10 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
             isis_lsp_pkt_t *lsp_pkt = node_info->self_lsp_pkt;
             if(!lsp_pkt)
                 return;
-            #elif
+            #else
             assert (rtr_id);
-            uint32_t rtr_id_int = tcp_ip_covert_ip_p_to_n(rtr_id) ;
-            isis_lsp_pkt_t *lsp_pkt = isis_lookup_lsp_from_lsdb(node, rtr_id_int);
+            uint32_t rtr_id_int = tcp_ip_convert_ip_p_to_n(rtr_id) ;
+            isis_lsp_pkt_t *lsp_pkt = isis_lookup_lsp_entry_from_lspdb(node, rtr_id_int);
             #endif
             ethernet_frame_t *lsp_eth_hdr = (ethernet_frame_t *) (lsp_pkt->pkt);
             size_t pkt_size = lsp_pkt->pkt_size;
@@ -107,6 +127,11 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
             size_t lsp_pkt_size = pkt_size - GET_ETH_HDR_SIZE_EXCL_PAYLOAD(lsp_eth_hdr);
             if (!lsp_pkt) break;
             isis_show_one_lsp_pkt_detail (NULL, lsp_pkt_hdr, lsp_pkt_size);
+            break;
+        }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_LSPDB_DETAIL:
+        {
+            isis_show_lspdb_detail(node); 
             break;
         }
         case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_ADJACENCY:
@@ -371,14 +396,20 @@ int isis_show_cli_tree(param_t *param){
             {
                 /* show node <node-name> protocol isis lsdb */
                 static param_t lsdb;
-                init_param(&lsdb, CMD, "lsdb", isis_show_handler, 0, INVALID, 0, "isis lsdb");
+                init_param(&lsdb, CMD, "lsdb", isis_show_handler, 0, INVALID, 0, "lspdb");
                 libcli_register_param(&isis_proto, &lsdb);
-                //set_param_cmd_code(&lsdb, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_LSDB);
-                set_param_cmd_code(&lsdb, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL); // For testing
+                set_param_cmd_code(&lsdb, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_LSDB);
+                //set_param_cmd_code(&lsdb, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL); // For testing
+                {
+                    /* show node <node-name> protocol isis lsdb detail */
+                    static param_t lspdb_detail;
+                    init_param(&lspdb_detail, CMD, "detail", isis_show_handler, 0, INVALID, 0, "lspdb-detail");
+                    libcli_register_param(&lsdb, &lspdb_detail);
+                    set_param_cmd_code(&lspdb_detail, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_LSPDB_DETAIL);
+                }
                 {
                     static param_t rtr_id;
-                    init_param(&rtr_id, LEAF, 0, isis_show_handler, 0, IPV4, "rtr-id",
-                        "Router-id in A.B.C.D format");
+                    init_param(&rtr_id, LEAF, 0, isis_show_handler, 0, IPV4, "rtr-id", "Router-id in A.B.C.D format");
                     libcli_register_param(&lsdb, &rtr_id);
                     set_param_cmd_code(&rtr_id, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_LSP_DETAIL);
                 }

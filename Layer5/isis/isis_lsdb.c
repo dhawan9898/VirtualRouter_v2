@@ -8,6 +8,33 @@
 
 static isis_lsp_pkt_t *gl_dummy_lsp_pkt = NULL;
 
+static void isis_show_one_lsp_pkt( isis_lsp_pkt_t *lsp_pkt) {
+
+    int rc = 0;
+    ethernet_frame_t *eth_hdr = (ethernet_frame_t *)lsp_pkt->pkt;
+    byte *lsp_hdr = eth_hdr->payload;
+
+    uint32_t *rtr_id = isis_get_lsp_pkt_rtr_id(lsp_pkt);
+    uint32_t *seq_no = isis_get_lsp_pkt_seq_no(lsp_pkt);
+
+    byte *lsp_tlv_buffer = lsp_hdr + sizeof (isis_pkt_hdr_t);
+
+    unsigned char *rtr_id_str = tcp_ip_convert_ip_n_to_p(*rtr_id, 0);
+    printf("LSP : %-16s   Seq # : %-4u    size(B) : %-4lu    "
+            "ref_c : %-3u   ",
+            rtr_id_str, *seq_no, 
+            lsp_pkt->pkt_size - ETH_HDR_SIZE_EXCL_PAYLOAD,
+            lsp_pkt->ref_count);
+
+    if (lsp_pkt->expiry_timer) {
+        printf("Life Time Remaining : %u sec\n",
+                      wt_get_remaining_time(lsp_pkt->expiry_timer) / 1000);
+    }
+    else {
+        printf ("\n");
+    }
+}
+
 static isis_lsp_pkt_t *isis_get_dummy_lsp_pkt_with_key(uint32_t rtr_id)
 {
     if(!gl_dummy_lsp_pkt){
@@ -210,6 +237,45 @@ uint32_t isis_show_one_lsp_pkt_detail(byte *buff, isis_pkt_hdr_t *lsp_pkt_hdr, s
    }ITERATE_TLV_END(lsp_tlv_buffer, tlv_type, tlv_len, tlv_value, lsp_tlv_buffer_size);
 
    return rc;
+}
+
+void isis_show_lspdb(node_t *node)
+{
+    avltree_node_t *curr;
+    isis_lsp_pkt_t *lsp_pkt;
+
+    avltree_t *lspdb = isis_get_lspdb_root(node);
+    if(!lspdb)
+        return;
+    ITERATE_AVL_TREE_BEGIN(lspdb, curr){
+
+        lsp_pkt = avltree_container_of(curr, isis_lsp_pkt_t, avl_node_glue);
+        isis_show_one_lsp_pkt(lsp_pkt);
+    }ITERATE_AVL_TREE_END(lspdb, curr);
+}
+
+void isis_show_lspdb_detail(node_t *node) {
+
+    avltree_node_t *curr;
+    isis_lsp_pkt_t *lsp_pkt;
+    
+    avltree_t *lspdb = isis_get_lspdb_root(node);
+
+    if (!lspdb) 
+        return;
+
+    ITERATE_AVL_TREE_BEGIN(lspdb, curr) {
+
+        lsp_pkt = avltree_container_of(curr, isis_lsp_pkt_t, avl_node_glue);
+        ethernet_frame_t *lsp_eth_hdr = (ethernet_frame_t *) (lsp_pkt->pkt);
+        size_t pkt_size = lsp_pkt->pkt_size;
+        isis_pkt_hdr_t *lsp_pkt_hdr = (isis_pkt_hdr_t *)(lsp_eth_hdr->payload);
+        size_t lsp_pkt_size = pkt_size - GET_ETH_HDR_SIZE_EXCL_PAYLOAD(lsp_eth_hdr);
+        if (!lsp_pkt) 
+            continue;
+        isis_show_one_lsp_pkt_detail (NULL, lsp_pkt_hdr, lsp_pkt_size);
+
+    } ITERATE_AVL_TREE_END;
 }
 
 avltree_t *isis_get_lspdb_root(node_t *node)

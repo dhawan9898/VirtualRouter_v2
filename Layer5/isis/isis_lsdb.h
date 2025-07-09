@@ -12,6 +12,10 @@ byte *isis_print_lsp_id(isis_lsp_pkt_t *lsp_pkt);
 
 uint32_t isis_show_one_lsp_pkt_detail(byte *buff, isis_pkt_hdr_t *lsp_pkt_hdr, size_t pkt_size);
 
+void isis_show_lspdb(node_t *node);
+
+void isis_show_lspdb_detail(node_t *node);
+
 void isis_cleanup_lspdb(node_t *node);
 
 avltree_t *isis_get_lspdb_root(node_t *node);

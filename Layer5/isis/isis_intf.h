@@ -53,7 +53,8 @@ void isis_start_sending_hellos(interface_t *intf);
 void isis_stop_sending_hellos(interface_t *intf);
 void isis_interface_updates(void *arg, size_t arg_size);
 void isis_refresh_intf_hellos(interface_t *intf);
-
+void isis_show_one_intf_stats (interface_t *intf);
+void isis_show_all_intf_stats(node_t *node);
 
 static void isis_transmit_hello(void *arg, uint32_t arg_size) {
 
