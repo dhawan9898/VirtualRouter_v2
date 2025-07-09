@@ -4,6 +4,7 @@
 #include "isis_const.h"
 #include "isis_rtr.h"
 #include "isis_flood.h"
+#include "isis_events.h"
 #include "../../avlTree/avlTree.h"
 
 static isis_lsp_pkt_t *gl_dummy_lsp_pkt = NULL;
@@ -76,6 +77,7 @@ static void isis_generate_lsp_pkt(void *arg, uint32_t arg_size)
     node_info->lsp_pkt_gen_task = NULL;
     isis_create_fresh_lsp_pkt(node);
     isis_schedule_lsp_flood(node, node_info->self_lsp_pkt, NULL);
+    isis_install_lsp(node, NULL, node_info->self_lsp_pkt);
 }
 
 void isis_schedule_lsp_pkt_generation(node_t *node)
@@ -348,5 +350,131 @@ void isis_cleanup_lspdb(node_t *node)
         lsp_pkt = avltree_container_of(curr, isis_lsp_pkt_t, avl_node_glue);
         isis_remove_lsp_pkt_from_lspdb(node, lsp_pkt);
     }ITERATE_AVL_TREE_END;
+}
+
+void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pkt)
+{
+    bool self_lsp;
+    bool recvd_via_intf;
+    uint32_t *rtr_id;
+    ip_add_t rtr_id_str;
+    isis_lsp_pkt_t *old_lsp_pkt;
+    isis_event_type_t event_type;
+    bool duplicate_lsp;
+    uint32_t *old_seq_no = NULL;
+    uint32_t *new_seq_no = NULL;
+    isis_node_info_t *node_info;
+
+    self_lsp = isis_our_lsp(node, new_lsp_pkt);
+    recvd_via_intf = iif ? true : false;
+    event_type = isis_event_none;
+
+    rtr_id = isis_get_lsp_pkt_rtr_id(new_lsp_pkt);
+    tcp_ip_convert_ip_n_to_p(*rtr_id, rtr_id_str.ip_addr); /* Converting to print local ip/ router id in presentation form */
+
+    old_lsp_pkt = isis_lookup_lsp_entry_from_lspdb(node, *rtr_id);
+    if(old_lsp_pkt){
+        old_seq_no = isis_get_lsp_pkt_seq_no(old_lsp_pkt);
+    }
+    new_seq_no = isis_get_lsp_pkt_seq_no(new_lsp_pkt);
+
+    sprintf(tlb, "%s : Lsp Recvd : %s-%u(%p) on intf %s, old lsp : %s-%u(%p)\n",
+        ISIS_LSPDB_TRACE,
+        rtr_id_str.ip_addr, *new_seq_no, 
+        new_lsp_pkt->pkt,
+        iif ? iif->if_name : 0,
+        old_lsp_pkt ? rtr_id_str.ip_addr : 0,
+        old_lsp_pkt ? *old_seq_no : 0,
+        old_lsp_pkt ? old_lsp_pkt->pkt : 0);
+    tcp_trace(node, iif, tlb);
+
+    duplicate_lsp = (old_lsp_pkt && (*old_seq_no == *new_seq_no));
+
+    /* Self LSPs handling */
+    /* Case #1 */
+    if(self_lsp && duplicate_lsp)
+    {
+        event_type = isis_event_self_duplicate_lsp;
+        sprintf(tlb, "\t%s : Event : %s : self Duplicate LSP, No Action\n",
+            ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf){
+            /* No action - self lsp with same seq no may come through interface because of flooding */
+        }
+        else{
+            /* self lsp with same seq no is not possible - seq no is supposed to increment in successive generations */
+            assert(0);
+        }
+    }
+    /* Case #2 */
+    else if (self_lsp && !old_lsp_pkt)
+    {
+        event_type = isis_event_self_fresh_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf){
+            /* We will have to re-generate the self lsp, so that after forwarding all nodes has this lsp with the latest seq no */
+            node_info = ISIS_NODE_INFO(node);
+            node_info->seq_no = *new_seq_no;
+            sprintf(tlb, "\t%s : Event : %s : self-LSP to be generated with seq no %u\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type), *new_seq_no + 1);
+            tcp_trace(node, iif, tlb);
+
+            isis_schedule_lsp_pkt_generation(node);
+        }else{
+            /* add the newly generated lsp pkt to database and schedule lsp flooding */
+            sprintf(tlb, "\t%s : Event : %s : LSP to be Added in LSPDB and flood\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type));
+            tcp_trace(node, iif, tlb);
+
+            isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
+            isis_schedule_lsp_flood(node, new_lsp_pkt, 0);
+        }
+    }
+    /* Case #3 */
+    else if (self_lsp && old_lsp_pkt && (*new_seq_no > *old_seq_no))
+    {
+        event_type = isis_event_self_new_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf){
+            /* lsp pkt has to be re-generated - either someone is sending manipulated lsp pkts or local database update failed*/
+            node_info = ISIS_NODE_INFO(node);
+            node_info->seq_no = *new_seq_no;
+             sprintf(tlb, "\t%s : Event : %s : self-LSP to be generated with seq no %u\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type), *new_seq_no + 1);
+            tcp_trace(node, iif, tlb);
+            isis_schedule_lsp_pkt_generation(node);
+        }else{
+            /* update the database with the latest self lsp pkt */
+            sprintf(tlb, "\t%s : Event : %s : LSP %s-%u to be replaced in LSPDB "
+                "with new LSP %s-%u and flood\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type),
+                rtr_id_str.ip_addr, *old_seq_no,
+                rtr_id_str.ip_addr, *new_seq_no);
+            isis_remove_lsp_pkt_from_lspdb(node, old_lsp_pkt);
+            isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
+            isis_schedule_lsp_flood(node, new_lsp_pkt, 0);
+        }
+    }
+    /* Case #4 */
+    else if (self_lsp && old_lsp_pkt && (*new_seq_no < *old_seq_no))
+    {
+        event_type = isis_event_self_old_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf){
+            /* No action - looks like an old pkt is still circulating. We ignore so as to avoid further forwarding it */
+            sprintf(tlb, "\t%s : Event : %s Recvd Duplicate LSP %s-%u, no Action\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type),
+                rtr_id_str.ip_addr, *new_seq_no);
+            tcp_trace(node, iif, tlb);
+        }else{
+            /* This should'nt be valid */
+            assert(0);
+        }
+    }
+
+    /* Remote LSPs handling */
 }
 

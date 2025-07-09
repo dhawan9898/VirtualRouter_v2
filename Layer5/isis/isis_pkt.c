@@ -4,6 +4,7 @@
 #include "isis_intf.h"
 #include "isis_rtr.h"
 #include "isis_adjacency.h"
+#include "isis_lsdb.h"
 #include "layer5.h"
 #include <assert.h>
 
@@ -126,7 +127,18 @@ static void isis_process_hello_pkt(node_t *node, interface_t *iif, ethernet_fram
 
 static void isis_process_lsp_pkt(node_t *node, interface_t *iif, ethernet_frame_t *lsp_eth_hdr, size_t pkt_size)
 {
+    isis_lsp_pkt_t *new_lsp_pkt;
+    if(!isis_node_intf_is_enable(iif))
+        return;
+    if((!ISIS_INTF_INFO(iif)->adjacency) && (!ISIS_INTF_INFO(iif)->adjacency->adj_state == ISIS_ADJ_STATE_UP))
+        return;
 
+    ISIS_INTF_INCREMENT_STATS(iif, good_lsp_pkt_recvd);
+    new_lsp_pkt = calloc(1, sizeof(isis_lsp_pkt_t));
+    new_lsp_pkt->pkt = tcp_ip_get_new_pkt_buffer(pkt_size);
+    memcpy(new_lsp_pkt->pkt, (byte *)lsp_eth_hdr, pkt_size);
+    new_lsp_pkt->pkt_size = pkt_size;
+    isis_install_lsp(node, iif, new_lsp_pkt);
 }
 
 void isis_pkt_receive(void *arg, size_t arg_size)

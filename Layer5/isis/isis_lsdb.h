@@ -32,4 +32,6 @@ void isis_free_dummy_lsp_pkt(void);
 
 bool isis_our_lsp(node_t *node, isis_lsp_pkt_t *lsp_pkt);
 
+void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pkt);
+
 #endif

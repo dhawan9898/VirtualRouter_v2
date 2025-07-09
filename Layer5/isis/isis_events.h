@@ -3,7 +3,7 @@
 
 typedef enum isis_event_type_ {
 
-    isis_events_none,
+    isis_event_none,
     /*lspdb update events begin*/
     isis_event_self_duplicate_lsp,
     isis_event_self_fresh_lsp,
