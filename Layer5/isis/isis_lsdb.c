@@ -72,11 +72,10 @@ static void isis_generate_lsp_pkt(void *arg, uint32_t arg_size)
     node_t *node = (node_t *)arg;
     isis_node_info_t *node_info = ISIS_NODE_INFO(node);
 
-    sprintf(tlb, "Asyncronous LSP generation task %p triggered\n", node_info->lsp_pkt_gen_task);
+    sprintf(tlb, "%s : Self-LSP Generation task %p triggered\n", ISIS_LSPDB_TRACE,  node_info->lsp_pkt_gen_task);
     tcp_trace(node, NULL, tlb);
     node_info->lsp_pkt_gen_task = NULL;
     isis_create_fresh_lsp_pkt(node);
-    isis_schedule_lsp_flood(node, node_info->self_lsp_pkt, NULL);
     isis_install_lsp(node, NULL, node_info->self_lsp_pkt);
 }
 
@@ -476,5 +475,152 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
     }
 
     /* Remote LSPs handling */
+    /* Case #1 remote lsp with same sequence number as exiting in lsp database */
+    else if(!self_lsp && duplicate_lsp)
+    {
+        event_type = isis_event_remote_duplicate_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf)
+        {
+            /* Ignore the pkt; No need to forward also */
+            sprintf(tlb, "\t%s : Event : %s Recvd Duplicate LSP %s-%u, no Action\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type), rtr_id_str.ip_addr, *new_seq_no);
+            tcp_trace(node, iif, tlb);
+        }
+        else{
+            /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
+            assert(0);
+        }
+    }
+
+    /* Case #2  remote lsp which is fresh (no prev. entries in lsp database)*/
+    else if(!self_lsp && !old_lsp_pkt)
+    {
+        event_type = isis_event_remote_fresh_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf)
+        {
+            /* New lsps should be added to database and also should be forwarded */
+            sprintf(tlb, "\t%s : Event : %s : LSP %s-%u to be Added in LSPDB and flood\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type), rtr_id_str.ip_addr, *new_seq_no);
+            tcp_trace(node, iif, tlb);
+            isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
+            isis_schedule_lsp_flood(node, new_lsp_pkt, iif);
+        }
+        else{
+            /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
+            assert(0);
+        }
+    }
+
+    /* Case #3  remote lsp which has a new seq number than as the one in the lsp database */
+    else if(!self_lsp && old_lsp_pkt && (*new_seq_no < *old_seq_no))
+    {
+        event_type = isis_event_remote_new_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf)
+        {
+            /* Remove the lsp with lesser sequence number from lsp db
+             * Add the lsp with greater seq no to the lspdb
+             * forward flood the pkt   
+            */
+            sprintf(tlb, "\t%s : Event : %s : LSP %s-%u to be replaced in LSPDB with"
+                " LSP %s-%u and flood\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type),
+                rtr_id_str.ip_addr, *old_seq_no,
+                rtr_id_str.ip_addr, *new_seq_no);
+            tcp_trace(node, iif, tlb);
+            isis_remove_lsp_pkt_from_lspdb(node, old_lsp_pkt);
+            isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
+            isis_schedule_lsp_flood(node, new_lsp_pkt, iif);
+        }
+        else{
+            /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
+            assert(0);
+        }
+    }  
+    
+    /* Case #4 -  remote lsp with a new sequence number compared to the one in lsp database */
+    else if(!self_lsp && old_lsp_pkt && (*new_seq_no < *old_seq_no))
+    {
+        event_type = isis_event_remote_old_lsp;
+        sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
+        tcp_trace(node, iif, tlb);
+        if(recvd_via_intf)
+        {
+            /* Old lsp pkt is still in circulation, ignore it
+             * Respond with the new lsp pkt found in the lspdb, only to the input interface
+            */
+            sprintf(tlb, "\t%s : Event : %s Old LSP %s-%u will be back fired out of intf %s\n",
+                ISIS_LSPDB_TRACE, isis_event_str(event_type),
+                rtr_id_str.ip_addr, *old_seq_no,
+                iif->if_name);
+            tcp_trace(node, iif, tlb);
+            isis_queue_lsp_pkt_for_transmission(iif, old_lsp_pkt);
+        }
+        else{
+            /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
+            assert(0);
+        }
+    }
+    sprintf(tlb, "%s : LSPDB Updated  for new Lsp Recvd : %s-%u, old lsp : %s-%u, Event : %s\n",
+        ISIS_LSPDB_TRACE,
+        rtr_id_str.ip_addr, *new_seq_no,
+        old_lsp_pkt ? rtr_id_str.ip_addr :0,
+        old_lsp_pkt ? *old_seq_no : 0,
+        isis_event_str(event_type));
+    tcp_trace(node, iif, tlb); 
+}
+/* LSPDB timer callback handler */
+static void isis_lsp_pkt_delete_from_lspdb_timer_cb(void *arg, uint32_t arg_size)
+{
+    if(!arg)
+        return;
+    isis_timer_data_t *timer_data = (isis_timer_data_t *)arg;
+    node_t *node = timer_data->node;
+    isis_lsp_pkt_t *lsp_pkt = (isis_lsp_pkt_t *)timer_data->data;
+    timer_data->data = NULL;
+    
+    free(timer_data);
+    timer_de_register_app_event(lsp_pkt->expiry_timer);
+    lsp_pkt->expiry_timer = NULL;
+
+    avltree_remove(&lsp_pkt->avl_node_glue, isis_get_lspdb_root(node));
+    lsp_pkt->installed_in_db = false;
+    isis_deref_isis_pkt(lsp_pkt);
 }
 
+void isis_start_lsp_pkt_installation_timer(node_t *node, isis_lsp_pkt_t *lsp_pkt)
+{
+    wheel_timer_t *wt;
+    isis_node_info_t *node_info;
+    node_info = ISIS_NODE_INFO(node);
+    wt = node_get_timer_instance(node);
+    if(lsp_pkt->expiry_timer)
+        return;
+    isis_timer_data_t *timer_data = calloc(1, sizeof(isis_timer_data_t));
+    timer_data->node = node;
+    timer_data->data = (byte *)lsp_pkt;
+    timer_data->data_size = sizeof(isis_lsp_pkt_t);
+    lsp_pkt->expiry_timer = timer_register_app_event(wt, isis_lsp_pkt_delete_from_lspdb_timer_cb, (void *)timer_data, \
+                                                        sizeof(isis_timer_data_t), node_info->lsp_lifetime_interval, 0);
+}
+
+void isis_stop_lsp_pkt_installation_timer(isis_lsp_pkt_t *lsp_pkt)
+{
+    if(!lsp_pkt->expiry_timer)
+        return;
+    isis_timer_data_t *timer_data = wt_elem_get_and_set_app_data(lsp_pkt->expiry_timer, 0);
+    free(timer_data);
+    timer_de_register_app_event(lsp_pkt->expiry_timer);
+    lsp_pkt->expiry_timer = NULL;
+}
+
+void isis_refresh_lsp_pkt_installation_timer(node_t *node, isis_lsp_pkt_t *lsp_pkt)
+{
+    isis_stop_lsp_pkt_installation_timer(lsp_pkt);
+    isis_start_lsp_pkt_installation_timer(node, lsp_pkt);
+}

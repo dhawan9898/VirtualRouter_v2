@@ -8,7 +8,6 @@
 #include "isis_pkt.h"
 #include "isis_lsdb.h"
 
-extern display_node_interfaces(param_t *param, ser_buff_t *tlv_buf);
 
 static int isis_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enable_or_disable)
 {
@@ -70,7 +69,9 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
         if(strncmp(tlv->leaf_id, "node-name", strlen("node-name")) == 0U)
             node_name = tlv->value;
         else if(strncmp(tlv->leaf_id, "rtr-id", strlen("rtr-id")) == 0U)
-            rtr_id = tlv->value;           
+            rtr_id = tlv->value;
+        else if(strncmp(tlv->leaf_id, "if-name", strlen("if-name")) == 0U)
+            intf_name = tlv->value;            
         else
             assert(0);
     }TLV_LOOP_END;
@@ -86,7 +87,7 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
         }
         case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_INTF:
         {
-            intf = get_node_by_node_name(node, intf_name);
+            intf = get_node_intf_by_name(node, intf_name);
             if(!intf){
                 printf("%s: Error - Non-existing interface\n");
                 return -1;
@@ -389,9 +390,16 @@ int isis_show_cli_tree(param_t *param){
                 /* show node <node-name> protocol isis interface */
                 static param_t interface;
                 init_param(&interface, CMD, "interface",  isis_show_handler, 0, INVALID, 0, "interface");
-                libcli_register_display_callback(&interface, display_node_interfaces);
+                libcli_register_display_callback(&interface, isis_show_handler);
                 libcli_register_param(&isis_proto, &interface);
                 set_param_cmd_code(&interface, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_INTF);
+                {
+                    /* show node <node-name> protocol isis interface <if-name> */
+                    static param_t if_name;
+                    init_param(&if_name, LEAF, 0, isis_show_handler, 0, 0, "if-name", "Interface name");
+                    libcli_register_param(&interface, &if_name);
+                    set_param_cmd_code(&if_name, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ONE_INTF);
+                }
             }
             {
                 /* show node <node-name> protocol isis lsdb */
