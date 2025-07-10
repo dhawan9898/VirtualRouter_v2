@@ -259,7 +259,7 @@ void isis_create_fresh_lsp_pkt(node_t *node)
     if(!node)
         return;
     
-    gen_purge_lsp = (bool)(node_info->lsp_gen_flags & ISIS_LSP_PKT_CREATE_PURGE_LSP); 
+    gen_purge_lsp = IS_BIT_SET(node_info->lsp_gen_flags, ISIS_LSP_F_PURGE_LSP); 
     lsp_size_estimate += ETH_HDR_SIZE_EXCL_PAYLOAD;                 /* ETH header size */
     lsp_size_estimate += sizeof(isis_pkt_hdr_t);                    /* ISIS Pkt header size */
     lsp_size_estimate += TLV_OVERHEAD_SIZE + NODE_NAME_SIZE;        /* size of Hostname TLV Type, TLV len and Hostname */

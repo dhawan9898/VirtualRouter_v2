@@ -391,6 +391,9 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
         old_lsp_pkt ? old_lsp_pkt->pkt : 0);
     tcp_trace(node, iif, tlb);
 
+    if(self_lsp && purge_lsp)
+        return;
+
     duplicate_lsp = (old_lsp_pkt && (*old_seq_no == *new_seq_no));
 
     /* Self LSPs handling */
@@ -527,7 +530,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
     }
 
     /* Case #3  remote lsp which has a new seq number than as the one in the lsp database */
-    else if(!self_lsp && old_lsp_pkt && (*new_seq_no < *old_seq_no))
+    else if(!self_lsp && old_lsp_pkt && (*new_seq_no > *old_seq_no))
     {
         event_type = isis_event_remote_new_lsp;
         sprintf(tlb, "\t%s : Event : %s\n", ISIS_LSPDB_TRACE, isis_event_str(event_type));
@@ -538,11 +541,19 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
              * Add the lsp with greater seq no to the lspdb
              * forward flood the pkt   
             */
-            sprintf(tlb, "\t%s : Event : %s : LSP %s-%u to be replaced in LSPDB with"
-                " LSP %s-%u and flood\n",
-                ISIS_LSPDB_TRACE, isis_event_str(event_type),
-                rtr_id_str.ip_addr, *old_seq_no,
-                rtr_id_str.ip_addr, *new_seq_no);
+            if(!purge_lsp){
+                sprintf(tlb, "\t%s : Event : %s : LSP %s-%u to be replaced in LSPDB with"
+                    " LSP %s-%u and flood\n",
+                    ISIS_LSPDB_TRACE, isis_event_str(event_type),
+                    rtr_id_str.ip_addr, *old_seq_no,
+                    rtr_id_str.ip_addr, *new_seq_no);
+            }
+            else {
+                sprintf(tlb, "\t%s : Event : %s : Purge LSP %s-%u Deleted from LSDB"
+                   " and flood\n",
+                   ISIS_LSPDB_TRACE, isis_event_str(event_type),
+                   rtr_id_str.ip_addr, *old_seq_no);
+            }
             tcp_trace(node, iif, tlb);
             isis_remove_lsp_pkt_from_lspdb(node, old_lsp_pkt);
             if(!purge_lsp)

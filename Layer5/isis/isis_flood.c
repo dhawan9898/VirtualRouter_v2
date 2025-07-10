@@ -161,9 +161,9 @@ void isis_create_and_flood_purge_lsp_pkt_synchronously(node_t *node)
     isis_node_info_t *node_info = ISIS_NODE_INFO(node);
     if(!node_info)
         return;
-    node_info->lsp_gen_flags |= ISIS_LSP_PKT_CREATE_PURGE_LSP;  /* Set purge bit */
+    SET_BIT(node_info->lsp_gen_flags, ISIS_LSP_F_PURGE_LSP);  /* Set purge bit */
     isis_create_fresh_lsp_pkt(node);
-    node_info->lsp_gen_flags &= ~ISIS_LSP_PKT_CREATE_PURGE_LSP; /* Clear Purge bit */
+    UNSET_BIT(node_info->lsp_gen_flags, ISIS_LSP_F_PURGE_LSP); /* Clear Purge bit */
     isis_flood_lsp_synchronously(node, node_info->self_lsp_pkt);
 }
 
