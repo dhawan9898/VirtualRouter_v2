@@ -143,6 +143,30 @@ void isis_intf_purge_lsp_xmit_queue(interface_t *intf)
     }
 }
 
+void isis_flood_lsp_synchronously(node_t *node, isis_lsp_pkt_t *lsp_pkt)
+{
+    interface_t *intf;
+    isis_intf_info_t *intf_info;
+
+    ITERATE_NODE_INTERFACES_BEGIN(node, intf){
+        intf_info = ISIS_INTF_INFO(intf);
+        if(intf_info->adjacency && intf_info->adjacency->adj_state == ISIS_ADJ_STATE_UP){
+            send_pkt_out(lsp_pkt->pkt, lsp_pkt->pkt_size, intf);
+        }
+    }ITERATE_NODE_INTERFACES_END(node, intf);
+}
+
+void isis_create_and_flood_purge_lsp_pkt_synchronously(node_t *node)
+{
+    isis_node_info_t *node_info = ISIS_NODE_INFO(node);
+    if(!node_info)
+        return;
+    node_info->lsp_gen_flags |= ISIS_LSP_PKT_CREATE_PURGE_LSP;  /* Set purge bit */
+    isis_create_fresh_lsp_pkt(node);
+    node_info->lsp_gen_flags &= ~ISIS_LSP_PKT_CREATE_PURGE_LSP; /* Clear Purge bit */
+    isis_flood_lsp_synchronously(node, node_info->self_lsp_pkt);
+}
+
 void isis_enter_reconciliation_phase(node_t *node)
 {
 

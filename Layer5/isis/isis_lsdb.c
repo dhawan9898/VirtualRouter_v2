@@ -355,6 +355,7 @@ void isis_cleanup_lspdb(node_t *node)
 void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pkt)
 {
     bool self_lsp;
+    bool purge_lsp;
     bool recvd_via_intf;
     uint32_t *rtr_id;
     ip_add_t rtr_id_str;
@@ -368,6 +369,8 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
     self_lsp = isis_our_lsp(node, new_lsp_pkt);
     recvd_via_intf = iif ? true : false;
     event_type = isis_event_none;
+
+    purge_lsp = isis_is_purge_lsp(new_lsp_pkt);
 
     rtr_id = isis_get_lsp_pkt_rtr_id(new_lsp_pkt);
     tcp_ip_convert_ip_n_to_p(*rtr_id, rtr_id_str.ip_addr); /* Converting to print local ip/ router id in presentation form */
@@ -512,7 +515,8 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             sprintf(tlb, "\t%s : Event : %s : LSP %s-%u to be Added in LSPDB and flood\n",
                 ISIS_LSPDB_TRACE, isis_event_str(event_type), rtr_id_str.ip_addr, *new_seq_no);
             tcp_trace(node, iif, tlb);
-            isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
+            if(!purge_lsp)
+                isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
             isis_schedule_lsp_flood(node, new_lsp_pkt, iif);
         }
         else{
@@ -541,7 +545,8 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
                 rtr_id_str.ip_addr, *new_seq_no);
             tcp_trace(node, iif, tlb);
             isis_remove_lsp_pkt_from_lspdb(node, old_lsp_pkt);
-            isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
+            if(!purge_lsp)
+                isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
             isis_schedule_lsp_flood(node, new_lsp_pkt, iif);
         }
         else{

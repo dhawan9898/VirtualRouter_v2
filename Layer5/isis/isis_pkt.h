@@ -5,6 +5,9 @@
 typedef uint16_t isis_pkt_type_t;
 typedef uint8_t  isis_pkt_hdr_flags_t;
 
+/* LSP pkt generation flags */
+#define ISIS_LSP_PKT_CREATE_PURGE_LSP   1
+#define ISIS_LSP_PKT_CREATE_OVERLOAD_LSP (1 << 1)
 
 #pragma pack (push, 1)
 typedef struct isis_pkt_hdr_{
@@ -47,5 +50,7 @@ uint32_t *isis_get_lsp_pkt_seq_no(isis_lsp_pkt_t *lsp_pkt);
 void isis_ref_isis_pkt(isis_lsp_pkt_t *lsp_pkt);
 
 void isis_deref_isis_pkt(isis_lsp_pkt_t *lsp_pkt);
+
+bool isis_is_purge_lsp(isis_lsp_pkt_t *lsp_pkt);
 
 #endif

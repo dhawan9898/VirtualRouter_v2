@@ -97,6 +97,10 @@ void isis_de_init(node_t *node)
     isis_node_info_t *node_info;
     interface_t *intf;
     node_info = ISIS_NODE_INFO(node);
+    if(!node_info)
+        return;
+    
+    isis_create_and_flood_purge_lsp_pkt_synchronously(node); /*set purge bit and send the purge lsp out */
 
     ITERATE_NODE_INTERFACES_BEGIN(node, intf){
 
