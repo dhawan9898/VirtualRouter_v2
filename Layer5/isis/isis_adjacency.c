@@ -7,6 +7,7 @@
 #include "isis_lsdb.h"
 #include "isis_flood.h"
 #include "isis_l2map.h"
+#include "isis_events.h"
 
 static void isis_timer_expire_delete_adjacency_cb(void *arg, size_t arg_size)
 {
@@ -266,6 +267,7 @@ void isis_update_interface_adjacency_from_hello(interface_t *iif, byte *hello_tl
     if((ISIS_NODE_INFO(iif->att_node)->layer2_mapping == true) && (adjacency->adj_state == ISIS_ADJ_STATE_UP)){
         isis_update_layer2_mapping_on_adjacency_up(adjacency);
     }
+    isis_increment_event_counter(isis_event_counter_create_adjacency);
 }
 
 isis_adj_state_t isis_get_next_adj_state_on_receiving_next_hello(isis_adjacency_t *adjacency)
@@ -303,6 +305,7 @@ void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t n
                     adjacency->adj_state = new_adj_state;
                     isis_adjacency_stop_delete_timer(adjacency);
                     isis_adjacency_start_expiry_timer(adjacency);
+                    isis_increment_event_counter(isis_event_counter_state_down_init);
                     break;
                 }
                 case ISIS_ADJ_STATE_UP:
@@ -323,6 +326,7 @@ void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t n
                     adjacency->adj_state = new_adj_state;
                     isis_adjacency_stop_delete_timer(adjacency);
                     isis_adjacency_stop_expiry_timer(adjacency);
+                    isis_increment_event_counter(isis_event_counter_state_init_down);
                     break;
                 }
                 case ISIS_ADJ_STATE_INIT:
@@ -343,6 +347,7 @@ void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t n
                         isis_restart_reconciliation_timer(adjacency->intf->att_node);
                     }
                     isis_schedule_lsp_pkt_generation(adjacency->intf->att_node);
+                    isis_increment_event_counter(isis_event_counter_state_init_up);
                     break;
                 }
                 default:
@@ -361,6 +366,7 @@ void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t n
                     isis_adjacency_start_delete_timer(adjacency);
                     node_info->adj_up_count--;
                     isis_schedule_lsp_pkt_generation(adjacency->intf->att_node);
+                    isis_increment_event_counter(isis_event_counter_state_up_down);
                     break;
                 }
                 case ISIS_ADJ_STATE_INIT:
@@ -370,6 +376,7 @@ void isis_change_adjacency_state(isis_adjacency_t *adjacency, isis_adj_state_t n
                 case ISIS_ADJ_STATE_UP:
                 {
                     isis_adjacency_refresh_expiry_timer(adjacency);
+                    isis_increment_event_counter(isis_event_counter_state_up_up);
                     break;
                 }
                 default:
@@ -403,6 +410,7 @@ void isis_delete_adjacency(isis_adjacency_t *adjacency)
         node_info->adj_up_count--;
     }
     free(adjacency);
+    isis_increment_event_counter(isis_event_counter_delete_adjacency);
 }
 
 /* TLV22 handling functions */

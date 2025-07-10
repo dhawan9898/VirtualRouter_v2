@@ -93,6 +93,7 @@ void isis_schedule_lsp_pkt_generation(node_t *node)
     sprintf(tlb, "LSP generation task scheduled\n");
     tcp_trace(node, NULL, tlb);
     //isis_create_fresh_lsp_pkt(node); // For Test; to be removed
+    isis_increment_event_counter(isis_event_counter_generate_lsp);
 }
 
 byte *isis_print_lsp_id(isis_lsp_pkt_t *lsp_pkt)
@@ -404,6 +405,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             /* self lsp with same seq no is not possible - seq no is supposed to increment in successive generations */
             assert(0);
         }
+        isis_increment_event_counter(isis_event_counter_self_duplicate_lsp);
     }
     /* Case #2 */
     else if (self_lsp && !old_lsp_pkt)
@@ -429,6 +431,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
             isis_schedule_lsp_flood(node, new_lsp_pkt, 0);
         }
+        isis_increment_event_counter(isis_event_counter_self_fresh_lsp);
     }
     /* Case #3 */
     else if (self_lsp && old_lsp_pkt && (*new_seq_no > *old_seq_no))
@@ -455,6 +458,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             isis_add_lsp_pkt_to_lspdb(node, new_lsp_pkt);
             isis_schedule_lsp_flood(node, new_lsp_pkt, 0);
         }
+        isis_increment_event_counter(isis_event_counter_self_new_lsp);
     }
     /* Case #4 */
     else if (self_lsp && old_lsp_pkt && (*new_seq_no < *old_seq_no))
@@ -472,6 +476,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             /* This should'nt be valid */
             assert(0);
         }
+        isis_increment_event_counter(isis_event_counter_self_old_lsp);
     }
 
     /* Remote LSPs handling */
@@ -492,6 +497,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
             assert(0);
         }
+        isis_increment_event_counter(isis_event_counter_remote_duplicate_lsp);
     }
 
     /* Case #2  remote lsp which is fresh (no prev. entries in lsp database)*/
@@ -513,6 +519,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
             assert(0);
         }
+        isis_increment_event_counter(isis_event_counter_remote_fresh_lsp);
     }
 
     /* Case #3  remote lsp which has a new seq number than as the one in the lsp database */
@@ -541,6 +548,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
             assert(0);
         }
+        isis_increment_event_counter(isis_event_counter_remote_new_lsp);
     }  
     
     /* Case #4 -  remote lsp with a new sequence number compared to the one in lsp database */
@@ -565,6 +573,7 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
             /* There is no way a lsp belonging to other node, reaching us without being received by an interface */
             assert(0);
         }
+        isis_increment_event_counter(isis_event_counter_remote_old_lsp);
     }
     sprintf(tlb, "%s : LSPDB Updated  for new Lsp Recvd : %s-%u, old lsp : %s-%u, Event : %s\n",
         ISIS_LSPDB_TRACE,
@@ -590,6 +599,7 @@ static void isis_lsp_pkt_delete_from_lspdb_timer_cb(void *arg, uint32_t arg_size
 
     avltree_remove(&lsp_pkt->avl_node_glue, isis_get_lspdb_root(node));
     lsp_pkt->installed_in_db = false;
+    isis_increment_event_counter(isis_event_counter_delete_lsp);
     isis_deref_isis_pkt(lsp_pkt);
 }
 
