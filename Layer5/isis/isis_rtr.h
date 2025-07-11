@@ -29,6 +29,8 @@ typedef struct isis_node_info_{
     uint32_t lsp_lifetime_interval;
     /* lsp gen controlling flags - for purge lsp pkt*/
     uint8_t lsp_gen_flags;
+    /* overload timer */
+    timer_event_handle *lsp_overload_timer;
     /*Layer 2 Mapping */
     bool layer2_mapping;
 }isis_node_info_t;

@@ -7,6 +7,7 @@ typedef unsigned char byte;
 
 /* bit operations */
 #define SET_BIT(var, pos)       (var | (1U << pos))
+#define UNSET_BIT(var, pos)     (var & ~(1U << pos))
 #define IS_BIT_SET(var, pos)    ((var & (1U << pos)) == 1U)
 
 #define IS_MAC_BROADCAST_ADDR(mac) \

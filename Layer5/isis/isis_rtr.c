@@ -56,6 +56,7 @@ void isis_show_node_protocol_state(node_t *node)
 {
     interface_t *intf;
     isis_node_info_t *isis_node_info;
+    uint32_t rem_time;
     printf("ISIS Protocol : %s\n", isis_is_protocol_enable_on_node(node) ? "Enable" : "Disable");
 
     if(!isis_is_protocol_enable_on_node(node))
@@ -63,6 +64,13 @@ void isis_show_node_protocol_state(node_t *node)
     
     isis_node_info = ISIS_NODE_INFO(node);
     printf("Adjacency up count: %u\n", isis_node_info->adj_up_count);
+    
+    if(isis_node_info->lsp_overload_timer)
+        rem_time = wt_get_remaining_time(isis_node_info->lsp_overload_timer);
+    if(rem_time > 0)
+        printf("Overload Status: %s : %u%s\n", "ON Timer", rem_time, "sec left");
+    else
+        printf("Overload Status: %s\n", "OFF Timer : Not Running");
 
     ITERATE_NODE_INTERFACES_BEGIN(node, intf){
 

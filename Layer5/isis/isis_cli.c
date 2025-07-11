@@ -8,6 +8,11 @@
 #include "isis_pkt.h"
 #include "isis_lsdb.h"
 
+static void isis_clear_lsp_overload_flag(void *arg, uint32_t arg_size)
+{
+    isis_node_info_t *node_info = (isis_node_info_t *)arg;
+    UNSET_BIT(node_info->lsp_gen_flags, ISIS_LSP_F_OVERLOAD);
+}
 
 static int isis_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enable_or_disable)
 {
@@ -156,6 +161,8 @@ static int isis_intf_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mod
      interface_t *interface = NULL;
      uint32_t hello_interval;
      uint32_t passcode;
+     uint32_t overload_timer_value;
+     isis_node_info_t *node_info;
 
      cmdcode = EXTRACT_CMD_CODE(tlv_buff);
 
@@ -166,6 +173,9 @@ static int isis_intf_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mod
             }
             else if (strncmp(tlv->leaf_id, "if-name", strlen("if-name")) == 0) {
                 if_name =  tlv->value;
+            }
+            else if (strncmp(tlv->leaf_id, "timeout-val", strlen("timeout-val")) == 0) {
+                overload_timer_value =  tlv->value;
             }
             #if ISIS_ENABLE_AUTH   
             else if (strncmp(tlv->leaf_id, "hello-interval-value", strlen("hello-interval-value")) == 0){
@@ -181,6 +191,7 @@ static int isis_intf_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mod
      } TLV_LOOP_END;
 
      node = get_node_by_node_name(topo, node_name);
+     node_info = ISIS_NODE_INFO(node);
 
      switch (cmdcode) {
 
@@ -229,6 +240,29 @@ static int isis_intf_config_handler(param_t *param, ser_buff_t *tlv_buff, op_mod
                 case CMDCODE_CONF_NODE_ISIS_PROTO_L2_MAP:
                 {
                     isis_enable_layer2_mapping(node);
+                    break;
+                }
+                case CMDCODE_CONF_NODE_ISIS_PROTO_OVERLOAD:
+                {
+                    switch(enable_or_disable)
+                    {
+                        case CONFIG_ENABLE:
+                            SET_BIT(node_info->lsp_gen_flags, ISIS_LSP_F_OVERLOAD);
+                            break;
+                        case CONFIG_DISABLE:
+                            UNSET_BIT(node_info->lsp_gen_flags, ISIS_LSP_F_OVERLOAD);
+                            break;
+                        default:
+                            ;
+                    }
+                    break;
+                }
+                case CMDCODE_CONF_NODE_ISIS_PROTO_OVERLOAD_TIMER_VALUE:
+                {
+                    if(node_info->lsp_overload_timer)
+                        return;
+                    node_info->lsp_overload_timer = timer_register_app_event(node_get_timer_instance(node), isis_clear_lsp_overload_flag,\
+                                                                                (void *)node_info, sizeof(isis_node_info_t), overload_timer_value, 0);
                     break;
                 }
                 default: ;
@@ -321,6 +355,28 @@ int isis_config_cli_tree(param_t *param){
                 set_param_cmd_code(&l2map, CMDCODE_CONF_NODE_ISIS_PROTO_L2_MAP);
                 {
                     support_cmd_negation(&l2map);
+                }
+            }
+            {
+                /* config node <node-name> protocol isis overload */
+                static param_t overload;
+                init_param(&overload, CMD, "overload", isis_intf_config_handler, 0, INVALID, 0, "Send overload lsp pkt");
+                libcli_register_param(&isis_proto, &overload);
+                set_param_cmd_code(&overload, CMDCODE_CONF_NODE_ISIS_PROTO_OVERLOAD);
+                {
+                    /* config node <node-name> protocol isis overload timeout */
+                    static param_t timeout;
+                    init_param(&timeout, CMD, "timeout", isis_intf_config_handler, 0, INVALID, 0, "Timeout for overloading");
+                    libcli_register_param(&overload, &timeout);
+                    set_param_cmd_code(&timeout, CMDCODE_CONF_NODE_ISIS_PROTO_OVERLOAD_TIMER);
+                    {
+                        /* config node <node-name> protocol isis overload timeout <timeout-val> */
+                        static param_t timeout_val;
+                        init_param(&timeout_val, LEAF, 0, isis_intf_config_handler, 0, 0, "timeout-val", "lsp overloading timeout value in sec");
+                        libcli_register_param(&timeout, &timeout_val);
+                        set_param_cmd_code(&timeout_val, CMDCODE_CONF_NODE_ISIS_PROTO_OVERLOAD_TIMER_VALUE);
+                    }
+                    support_cmd_negation(&overload);
                 }
             }
 

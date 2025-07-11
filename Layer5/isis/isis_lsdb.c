@@ -205,6 +205,8 @@ uint32_t isis_show_one_lsp_pkt_detail(byte *buff, isis_pkt_hdr_t *lsp_pkt_hdr, s
    if(buff){
         rc += sprintf(buff + rc, "LSP ID : %s(%u)\n", tcp_ip_convert_ip_n_to_p(lsp_pkt_hdr->rtr_id, NULL), lsp_pkt_hdr->seq_no);
         rc += sprintf(buff + rc, "Flags : 0x%x\n", lsp_pkt_hdr->flags);
+        rc += sprintf(buff + rc, "\tOL Bit : %s\n", IS_BIT_SET(lsp_pkt_hdr->flags, ISIS_LSP_F_OVERLOAD)? "Set": "Unset");
+        rc += sprintf(buff + rc, "\tPurge Bit : %s\n", IS_BIT_SET(lsp_pkt_hdr->flags, ISIS_LSP_F_PURGE_LSP)? "Set": "Unset");
         rc += sprintf(buff + rc, "TLVs\n");
    }
    else{
