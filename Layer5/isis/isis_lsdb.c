@@ -231,6 +231,16 @@ uint32_t isis_show_one_lsp_pkt_detail(byte *buff, isis_pkt_hdr_t *lsp_pkt_hdr, s
                 }
                 break;
             }
+            case ISIS_TLV_ON_DEMAND:
+            {
+                if(buff){
+                    rc += sprintf(buff + rc, "\tTLV%d On Demand : %d\n", tlv_type, tlv_value);
+                }
+                else{
+                    rc += printf("\tTLV%d On Demand : %d\n", tlv_type, tlv_value);
+                }
+                break;
+            }
             case ISIS_IS_REACH_TLV:
             {
                 rc += isis_print_formatted_nbr_tlv22(buff ? buff + rc  : NULL, tlv_value - TLV_OVERHEAD_SIZE, tlv_len + TLV_OVERHEAD_SIZE);

@@ -25,6 +25,10 @@ static char isis_event_str_arr[isis_event_max][128] =
     "ISIS EVENT GENERATE LSP",          /* isis_event_counter_generate_lsp */
     "ISIS EVENT CREATE ADJACENCY",      /* isis_event_counter_create_adjacency */
     "ISIS EVENT DELETE ADJACENCY"       /* isis_event_counter_delete_adjacency */
+    "ISIS EVENT RECONCILIATION TRIGGERED",      /* isis_event_counter_reconciliation_triggered */
+    "ISIS_EVENT RECONCILIATION RESTARTED",      /* isis_event_counter_reconciliation_restarted */
+    "ISIS EVENT RECONCILIATION EXIT",           /* isis_event_counter_reconciliation_exit */
+    "ISIS EVENT ON DEMAND FLOOD"                /* isis_event_counter_on_demand_flood */
 } ;
 
 const char *isis_event_str(isis_event_type_t isis_event_type)

@@ -6,6 +6,13 @@
 
 typedef struct isis_lsp_pkt_ isis_lsp_pkt_t; 
 
+typedef struct isis_reconcil_data_{
+    /* reconsiliation status */
+    bool reconciliation_in_progress;
+    /* reconciliation timer */
+    timer_event_handle *reconciliation_timer;
+}isis_reconcil_data_t;
+
 typedef struct isis_timer_data_ {
 
     node_t *node;
@@ -29,6 +36,8 @@ typedef struct isis_node_info_{
     uint32_t lsp_lifetime_interval;
     /* lsp gen controlling flags - for purge lsp pkt*/
     uint8_t lsp_gen_flags;
+    /* reconciliation handle */
+    isis_reconcil_data_t reconcil;
     /* overload timer */
     timer_event_handle *lsp_overload_timer;
     /*Layer 2 Mapping */

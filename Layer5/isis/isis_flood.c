@@ -5,7 +5,9 @@
 #include "isis_pkt.h"
 #include "isis_const.h"
 #include "../../WheelTimer/timerlib.h"
+#include "../../WheelTimer/WheelTimer.h"
 #include "isis_lsdb.h"
+#include "isis_events.h"
 
 static void isis_timer_wrapper_lsp_flood(void *arg, uint32_t arg_size)
 {
@@ -169,30 +171,112 @@ void isis_create_and_flood_purge_lsp_pkt_synchronously(node_t *node)
 
 void isis_enter_reconciliation_phase(node_t *node)
 {
+    isis_reconcil_data_t *reconcil_data;
+    isis_node_info_t *node_info;
 
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+
+    reconcil_data = &node_info->reconcil;
+    if(reconcil_data->reconciliation_in_progress)
+        return;
+    reconcil_data->reconciliation_in_progress = true;
+    timer_reschedule(node_info->periodic_lsp_flood_timer, ISIS_DEFAULT_RECONCILIATION_FLOOD_INTERVAL);
+    isis_start_reconciliation_timer(node);
+    isis_schedule_lsp_pkt_generation(node);
+    isis_increment_event_counter(isis_event_counter_reconciliation_triggered);
 }
 
 void isis_exit_reconciliation_phase(node_t *node)
 {
+    isis_reconcil_data_t *reconcil_data;
+    isis_node_info_t *node_info;
 
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+
+    reconcil_data = &node_info->reconcil;
+    reconcil_data->reconciliation_in_progress = false;
+    
+    timer_reschedule(node_info->periodic_lsp_flood_timer, ISIS_LSP_DEFAULT_FLOOD_INTERVAL);
+    isis_stop_reconciliation_timer(node);
+    isis_schedule_lsp_pkt_generation(node);
+    isis_increment_event_counter(isis_event_counter_reconciliation_exit);
 }
 
 void isis_restart_reconciliation_timer(node_t *node)
 {
+    isis_reconcil_data_t *reconcil_data;
+    isis_node_info_t *node_info;
 
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+
+    if(!reconcil_data->reconciliation_in_progress || reconcil_data->reconciliation_timer)
+        assert(0);
+
+    timer_reschedule(reconcil_data->reconciliation_timer, ISIS_DEFAULT_RECONCILIATION_THRESHOLD_TIME);
+    isis_increment_event_counter(isis_event_counter_reconciliation_restarted);
+}
+
+static void isis_timer_wrapper_exit_reconciliation_phase(void *arg, uint32_t arg_size)
+{
+    if(!arg)
+        return;
+    node_t *node = (node_t *)arg;
+
+    isis_exit_reconciliation_phase(node);
 }
 
 void isis_start_reconciliation_timer(node_t *node)
 {
+    isis_reconcil_data_t *reconcil_data;
+    isis_node_info_t *node_info;
 
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+
+    reconcil_data = &node_info->reconcil;
+    if(reconcil_data->reconciliation_in_progress)
+        return;
+
+    reconcil_data->reconciliation_timer = timer_register_app_event(node_get_timer_instance(node), 
+                                                                    isis_timer_wrapper_exit_reconciliation_phase,
+                                                                    (void *)node, sizeof(node), 
+                                                                    ISIS_DEFAULT_RECONCILIATION_THRESHOLD_TIME, false);
 }
 
 void isis_stop_reconciliation_timer(node_t *node)
 {
+    isis_reconcil_data_t *reconcil_data;
+    isis_node_info_t *node_info;
 
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+
+    reconcil_data = &node_info->reconcil;
+    if(!reconcil_data->reconciliation_timer)
+        return;
+    
+    timer_de_register_app_event(reconcil_data->reconciliation_timer);
+    reconcil_data->reconciliation_timer = NULL;
 }
 
 bool isis_is_reconciliation_in_progress(node_t *node)
 {
+    isis_reconcil_data_t *reconcil_data;
+    isis_node_info_t *node_info;
 
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_protocol_enable_on_node(node))
+        return;
+
+    reconcil_data = &node_info->reconcil;
+
+    return reconcil_data->reconciliation_in_progress;
 }

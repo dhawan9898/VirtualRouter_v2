@@ -22,6 +22,8 @@
 
 /* show node <node-name> protocol isis adjacency */
 #define CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_ADJACENCY 8
+#define CMDCODE_SHOW_NODE_ISIS_PROTOCOL_SHOW_EVENT_COUNTERS 101
+
 /* clear node <node-name> protocol isis adjacency */
 #define CMDCODE_CLEAR_NODE_ISIS_ADJACENCY 9
 /* show node <node-name> protocol isis lsdb <A,B.C.D> */

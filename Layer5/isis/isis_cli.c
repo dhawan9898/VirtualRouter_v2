@@ -145,6 +145,11 @@ static int isis_show_handler(param_t *param, ser_buff_t *tlv_buff, op_mode enabl
             isis_show_all_adjacencies(node);
             break;
         }
+        case CMDCODE_SHOW_NODE_ISIS_PROTOCOL_SHOW_EVENT_COUNTERS:
+        {
+            isis_print_event_counters();
+            break;
+        }
         default:
             ;
     }
@@ -484,6 +489,13 @@ int isis_show_cli_tree(param_t *param){
                 init_param(&adjacency, CMD, "adjacency", isis_show_handler, 0, INVALID, 0, "adjacency");
                 libcli_register_param(&isis_proto, &adjacency);
                 set_param_cmd_code(&adjacency, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_ALL_ADJACENCY);
+            }
+            {
+                /* show node <node-name> protocol isis events */
+                static param_t events;
+                init_param(&events, CMD, "events", isis_show_handler, 0, INVALID, 0, "event counters");
+                libcli_register_param(&isis_proto, &events);
+                set_param_cmd_code(&events, CMDCODE_SHOW_NODE_ISIS_PROTOCOL_SHOW_EVENT_COUNTERS);   
             }
         }
     }

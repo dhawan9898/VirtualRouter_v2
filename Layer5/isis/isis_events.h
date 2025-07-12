@@ -36,6 +36,10 @@ typedef enum isis_event_counter_ {
     isis_event_counter_generate_lsp,
     isis_event_counter_create_adjacency,
     isis_event_counter_delete_adjacency,
+    isis_event_counter_reconciliation_triggered,
+    isis_event_counter_reconciliation_restarted,
+    isis_event_counter_reconciliation_exit,
+    isis_event_counter_on_demand_flood,
     isis_event_counter_max
 } isis_event_counter_t;
 

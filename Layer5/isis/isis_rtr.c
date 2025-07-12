@@ -64,6 +64,8 @@ void isis_show_node_protocol_state(node_t *node)
     
     isis_node_info = ISIS_NODE_INFO(node);
     printf("Adjacency up count: %u\n", isis_node_info->adj_up_count);
+    printf("Reconciliation Status: %s\n", isis_node_info->reconcil.reconciliation_timer ? "ON" : "OFF");
+    printf("Layer2-Mapping: %s\n", isis_node_info->layer2_mapping ? "Enabled" : "Disabled");
     
     if(isis_node_info->lsp_overload_timer)
         rem_time = wt_get_remaining_time(isis_node_info->lsp_overload_timer);

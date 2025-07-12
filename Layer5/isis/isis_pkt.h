@@ -53,4 +53,6 @@ void isis_deref_isis_pkt(isis_lsp_pkt_t *lsp_pkt);
 
 bool isis_is_purge_lsp(isis_lsp_pkt_t *lsp_pkt);
 
+bool isis_on_demand_tlv_present(isis_lsp_pkt_t *lsp_pkt);
+
 #endif

@@ -265,6 +265,9 @@ void isis_create_fresh_lsp_pkt(node_t *node)
     lsp_size_estimate += TLV_OVERHEAD_SIZE + NODE_NAME_SIZE;        /* size of Hostname TLV Type, TLV len and Hostname */
     if(!gen_purge_lsp)
         lsp_size_estimate += isis_size_to_encode_all_nbr_tlv(node);     /* size for all TLVs (TLV22) and sub TLVs */
+    if(isis_is_reconciliation_in_progress(node)){
+        lsp_size_estimate += TLV_OVERHEAD_SIZE + sizeof(char);
+    }
 
     if(lsp_size_estimate > MAX_PACKET_BUFFER_SIZE)
         return;
@@ -286,7 +289,13 @@ void isis_create_fresh_lsp_pkt(node_t *node)
 
     byte *lsp_tlv_buffer = (byte *)(isis_pkt + 1U);
     lsp_tlv_buffer = tlv_buffer_insert_tlv(lsp_tlv_buffer, ISIS_TLV_HOSTNAME, NODE_NAME_SIZE, node->node_name);
-    if(gen_purge_lsp)
+
+    if(isis_is_reconciliation_in_progress(node)){
+        bool tlv_value = true;
+        lsp_tlv_buffer = tlv_buffer_insert_tlv(lsp_tlv_buffer, ISIS_TLV_ON_DEMAND, 1, &tlv_value);
+    }
+
+    if(!gen_purge_lsp)
         lsp_tlv_buffer = isis_encode_all_nbr_tlvs(node, lsp_tlv_buffer);
 
     if(node_info->self_lsp_pkt){
@@ -338,4 +347,14 @@ bool isis_is_purge_lsp(isis_lsp_pkt_t *lsp_pkt) {
     ethernet_frame_t *lsp_eth_hdr = (ethernet_frame_t *)(lsp_pkt->pkt);
     isis_pkt_hdr_t *lsp_hdr = (isis_pkt_hdr_t *)(lsp_eth_hdr->payload);
     return (IS_BIT_SET(lsp_hdr->flags, ISIS_LSP_F_PURGE_LSP));
+}
+
+bool isis_on_demand_tlv_present(isis_lsp_pkt_t *lsp_pkt)
+{
+    bool tlv_value = false;
+    uint8_t  tlv_len;
+    if(!lsp_pkt)
+        return;
+    tlv_value = (bool)tlv_buffer_get_particular_tlv(lsp_pkt->pkt, lsp_pkt->pkt_size, ISIS_TLV_ON_DEMAND, &tlv_len);
+    return tlv_value;
 }
