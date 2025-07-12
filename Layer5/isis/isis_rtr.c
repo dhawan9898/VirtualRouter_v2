@@ -24,6 +24,7 @@ static void isis_check_delete_node_info(node_t *node)
     /* Place assert checks */
     assert(node_info->lsp_pkt_gen_task == NULL);
     assert(node_info->periodic_lsp_flood_timer == NULL);
+    assert(node_info->reconcil.reconciliation_timer == NULL);
 
     free(node_info);
     node->node_nw_prop.isis_node_info = NULL;
@@ -125,6 +126,7 @@ void isis_de_init(node_t *node)
     isis_free_dummy_lsp_pkt();
     isis_node_cancel_all_queued_jobs(node);
     isis_stop_lsp_pkt_periodic_flooding(node);
+    isis_exit_reconciliation_phase(node);
     isis_check_delete_node_info(node);
     tcp_stack_de_register_l2_pkt_trap_rule(node, isis_pkt_trap_rule, isis_pkt_receive);
 }

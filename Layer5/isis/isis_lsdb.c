@@ -610,6 +610,16 @@ void isis_install_lsp(node_t *node, interface_t *iif, isis_lsp_pkt_t *new_lsp_pk
         old_lsp_pkt ? *old_seq_no : 0,
         isis_event_str(event_type));
     tcp_trace(node, iif, tlb); 
+
+    /* Handle lsp pkts with on-demand TLV */
+    node_info = ISIS_NODE_INFO(node);
+    if(!isis_is_reconciliation_in_progress(node) &&
+        !self_lsp && isis_on_demand_tlv_present(new_lsp_pkt) && !node_info->lsp_pkt_gen_task){
+
+        sprintf(tlb, "%s : FLooding self LSP pkt - Response to On-Demand TLV\n", ISIS_LSPDB_TRACE);
+        tcp_trace(node, iif, tlb);
+        isis_schedule_lsp_pkt_generation(node);
+    }
 }
 /* LSPDB timer callback handler */
 static void isis_lsp_pkt_delete_from_lspdb_timer_cb(void *arg, uint32_t arg_size)

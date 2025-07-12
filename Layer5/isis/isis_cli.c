@@ -7,6 +7,8 @@
 #include "isis_const.h"
 #include "isis_pkt.h"
 #include "isis_lsdb.h"
+#include "isis_flood.h"
+#include "isis_events.h"
 
 static void isis_clear_lsp_overload_flag(void *arg, uint32_t arg_size)
 {
@@ -337,7 +339,8 @@ int isis_clear_handler(param_t *param, ser_buff_t *tlv_buf, op_mode enable_or_di
         }
         case CMDCODE_CLEAR_NODE_ISIS_LSDB:
         {
-
+            isis_cleanup_lspdb(node);
+            isis_enter_reconciliation_phase(node);
             break;
         }
     }
